@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Run the simple PyTorch operator smoke tests against the local ACuda
 # build.  Usage:
-#   ACUDA_TORCH_PYTHON=/path/to/python src/acuda/tests/python/run-torch-ops.sh
+#   ACUDA_TORCH_PYTHON=/path/to/python rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python/run-torch-ops.sh
 # Optional: RTXDISAM_LIBRARY=/path/to/rtxdisam_native.so
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
-root="$(cd "$here/../../../.." && pwd)"        # rtxdisam/
+root="$(cd "$here/../../../../.." && pwd)"        # rtxdisam repo root
 acuda="${ACUDA_BIN_DIR:-$root/src/acuda/bin/release}"
 cublas="${ACUDA_CUBLAS_BIN_DIR:-$root/src/acuda_cublas/bin/release}"
 

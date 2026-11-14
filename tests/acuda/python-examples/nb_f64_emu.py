@@ -7,8 +7,8 @@ asserts:
   3. the emitted SPIR-V declares no Float64 capability (runs without
      shaderFloat64).
 
-Usage (from ACuda/):
-    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" python-test/nb_f64_emu.py
+Usage (from repo root):
+    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python-examples/nb_f64_emu.py
 """
 import ctypes
 import os
@@ -25,7 +25,10 @@ try:
 except ImportError:
     sys.exit("numpy not found: run with '/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python'")
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+ACUDA_ROOT = os.path.join(REPO_ROOT, "src", "acuda")
+TESTS_ACUDA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ACUDA_ROOT
 
 
 def find_lib():
@@ -41,7 +44,7 @@ def find_lib():
 
 
 LIB = find_lib()
-PTX = os.path.join(ROOT, "tests", "ptx", "vecadd_numba.ptx")
+PTX = os.path.join(TESTS_ACUDA_DIR, "ptx", "vecadd_numba.ptx")
 ENTRY = (b"_ZN8__main__10vector_addB2v1B74cw51cXTLSUwv1sCUt9Ww0FEw1dRRQPKiLTj0gIGIFp_2b2o"
          b"LQFEYYkHSQB1OQAltAEAA_3d_3dE5ArrayIdLi1E1A7mutable7alignedE5ArrayIdLi1E1A7mutable7a"
          b"lignedE5ArrayIdLi1E1A7mutable7alignedE")

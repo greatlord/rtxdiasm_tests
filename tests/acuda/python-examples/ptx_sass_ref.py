@@ -12,8 +12,8 @@ Tools come from pip venvs (not system packages); override via env:
     ACUDA_PTXAS=/path/to/ptxas ACUDA_CUOBJDUMP=/path/to/cuobjdump
 Missing tools -> skip with exit 0 (never fail the build).
 
-Usage (from ACuda/):
-    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" python-test/ptx_sass_ref.py [--refresh]
+Usage (from repo root):
+    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python-examples/ptx_sass_ref.py [--refresh]
 --refresh rewrites tests/sass/*.sm_80.sass.txt from current output.
 """
 import os
@@ -22,9 +22,12 @@ import shutil
 import subprocess
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PTX_DIR = os.path.join(ROOT, "tests", "ptx")
-SASS_DIR = os.path.join(ROOT, "tests", "sass")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+ACUDA_ROOT = os.path.join(REPO_ROOT, "src", "acuda")
+TESTS_ACUDA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ACUDA_ROOT
+PTX_DIR = os.path.join(TESTS_ACUDA_DIR, "ptx")
+SASS_DIR = os.path.join(TESTS_ACUDA_DIR, "sass")
 
 
 def find_tool(env, names):

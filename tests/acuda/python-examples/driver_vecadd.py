@@ -5,8 +5,8 @@ alloc -> HtoD -> link PTX -> module -> function -> launch -> DtoH.
 Numba itself needs Phase 6 compiler work (.func, generic ld/st, signed
 ops, diamond CFG); see docs/supported-isa.md section 9.
 
-Usage (from ACuda/):
-    ""/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python"" python-test/driver_vecadd.py
+Usage (from repo root):
+    ""/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python"" rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python-examples/driver_vecadd.py
 """
 import ctypes
 import os
@@ -17,7 +17,10 @@ try:
 except ImportError:
     sys.exit("numpy not found: run with '/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python'")
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+ACUDA_ROOT = os.path.join(REPO_ROOT, "src", "acuda")
+TESTS_ACUDA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ACUDA_ROOT
 
 
 def find_lib():
@@ -36,8 +39,8 @@ def find_lib():
 
 
 LIB = find_lib()
-PTX = os.path.join(ROOT, "tests", "ptx", "vecadd.ptx")
-NUMBA_PTX = os.path.join(ROOT, "tests", "ptx", "vecadd_numba.ptx")
+PTX = os.path.join(TESTS_ACUDA_DIR, "ptx", "vecadd.ptx")
+NUMBA_PTX = os.path.join(TESTS_ACUDA_DIR, "ptx", "vecadd_numba.ptx")
 
 N = 1 << 20
 GRID = N // 256

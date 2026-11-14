@@ -3,8 +3,8 @@
 Loads tests/ptx/nb_ejit.ptx, launches with 21 positional args
 (data ptrs at 4/11/18, N at 16), verifies 4096 floats.
 
-Usage (from ACuda/):
-    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" python-test/nb_ejit_vecadd.py
+Usage (from repo root):
+    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python-examples/nb_ejit_vecadd.py
 """
 import ctypes
 import os
@@ -15,7 +15,10 @@ try:
 except ImportError:
     sys.exit("numpy not found: run with '/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python'")
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+ACUDA_ROOT = os.path.join(REPO_ROOT, "src", "acuda")
+TESTS_ACUDA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ACUDA_ROOT
 
 
 def find_lib():
@@ -31,7 +34,7 @@ def find_lib():
 
 
 LIB = find_lib()
-PTX = os.path.join(ROOT, "tests", "ptx", "nb_ejit.ptx")
+PTX = os.path.join(TESTS_ACUDA_DIR, "ptx", "nb_ejit.ptx")
 ENTRY = (b"_ZN6cudapy8__main__10vector_addB2v1B96cw51cXTLSUwv1sCUt9Ww0FEw0NRRQPKiLTj0gIGIFp_2b2o"
          b"LQFEYYkHSQB1OQAk0Bynm21OizQ1K0UoIGvDpQE8oxrNQE_3dE5ArrayIfLi1E1C7mutable7alignedE5"
          b"ArrayIfLi1E1C7mutable7alignedE5ArrayIfLi1E1C7mutable7alignedE")

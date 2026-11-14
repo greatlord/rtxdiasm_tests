@@ -4,8 +4,8 @@ Loads tests/ptx/nb_f32.ptx (.func + retval, 22 .b64 params),
 launches with status ptr at 0, data ptrs at 5/12/19, N at 17,
 masks 6/13/20 = 0, elsizes 7/14/21 = 4; verifies 4096 floats.
 
-Usage (from ACuda/):
-    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" python-test/nb_f32_vecadd.py
+Usage (from repo root):
+    "/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python" rtxdiasm_modules/rtxdiasm_tests/tests/acuda/python-examples/nb_f32_vecadd.py
 """
 import ctypes
 import os
@@ -16,7 +16,10 @@ try:
 except ImportError:
     sys.exit("numpy not found: run with '/home/magnusolsen/git/aicode-ptx/virtual python/ven-cu134/bin/python'")
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))))
+ACUDA_ROOT = os.path.join(REPO_ROOT, "src", "acuda")
+TESTS_ACUDA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = ACUDA_ROOT
 
 
 def find_lib():
@@ -32,7 +35,7 @@ def find_lib():
 
 
 LIB = find_lib()
-PTX = os.path.join(ROOT, "tests", "ptx", "nb_f32.ptx")
+PTX = os.path.join(TESTS_ACUDA_DIR, "ptx", "nb_f32.ptx")
 ENTRY = (b"_ZN8__main__10vector_addB2v1B74cw51cXTLSUwv1sCUt9Ww0FEw0NRRQPKiLTj0gIGIFp_2b2o"
          b"LQFEYYkHSQB1OQAltAEAA_3d_3dE5ArrayIfLi1E1A7mutable7alignedE5ArrayIfLi1E1A7mutable7a"
          b"lignedE5ArrayIfLi1E1A7mutable7alignedE")
