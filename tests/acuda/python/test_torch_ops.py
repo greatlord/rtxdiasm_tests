@@ -136,6 +136,27 @@ def main():
         want_v, want_i = torch.topk(x.cpu(), k, 1)
         check(f"topk {shape} k={k} values", got_v, want_v)
         check(f"topk {shape} k={k} indices", got_i, want_i)
+    for dt in (torch.float64,):
+        x = torch.randn(8, 64, device=DEV, dtype=dt)
+        got_v, got_i = torch.topk(x, 5, 1)
+        want_v, want_i = torch.topk(x.cpu(), 5, 1)
+        check(f"topk {dt} values", got_v, want_v)
+        check(f"topk {dt} indices", got_i, want_i)
+    # Ties: the value multiset is unique even though the indices are not.
+    x = torch.randint(0, 4, (8, 32), device=DEV).float()
+    got_v, _ = torch.topk(x, 5, 1)
+    want_v, _ = torch.topk(x.cpu(), 5, 1)
+    check("topk ties values", got_v, want_v)
+    x = torch.randn(8, 64, device=DEV)
+    got_v, got_i = torch.topk(x, 5, 1, largest=False)
+    want_v, want_i = torch.topk(x.cpu(), 5, 1, largest=False)
+    check("topk smallest values", got_v, want_v)
+    check("topk smallest indices", got_i, want_i)
+    x = torch.randn(4, 16, device=DEV)
+    got_v, got_i = torch.topk(x, 3, 0)
+    want_v, want_i = torch.topk(x.cpu(), 3, 0)
+    check("topk dim=0 values", got_v, want_v)
+    check("topk dim=0 indices", got_i, want_i)
 
     print(f"\n{CHECKED - len(FAILED)}/{CHECKED} checks passed")
     if FAILED:
