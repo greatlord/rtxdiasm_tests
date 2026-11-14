@@ -1392,6 +1392,24 @@ int main(void) {
                 CUfunction fbfn = NULL;
                 CHECK_CU(p_cuModuleGetFunction(&fbfn, fbmod, "vecadd_f32"));
                 CHECK_CU(p_cuModuleUnload(fbmod));
+                // ACUDA_CUBIN_BACKEND: a PTX fatbin must load under both
+                // the C parser (1) and the rtxdisam container path (2).
+                for (int mode = 1; mode <= 2; mode++) {
+                    char value[8];
+                    snprintf(value, sizeof(value), "%d", mode);
+                    setenv("ACUDA_CUBIN_BACKEND", value, 1);
+                    CUmodule bmod = NULL;
+                    CUresult br = p_cuModuleLoadFatBinary(&bmod, wrap);
+                    CUfunction bfn = NULL;
+                    if (br == 0)
+                        br = p_cuModuleGetFunction(&bfn, bmod, "vecadd_f32");
+                    if (br == 0)
+                        br = p_cuModuleUnload(bmod);
+                    unsetenv("ACUDA_CUBIN_BACKEND");
+                    CHECK(br == 0);
+                    if (br == 0)
+                        printf("  driver fatbin backend=%d ok\n", mode);
+                }
                 free(blob);
                 printf("  driver fatbin ok\n");
             }
