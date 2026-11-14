@@ -198,8 +198,8 @@
     },
     "rtxdisam.core/1.0.0": {
       "type": "project",
-      "path": "../../../../src/rtxdisam/rtxdisam.csproj",
-      "msbuildProject": "../../../../src/rtxdisam/rtxdisam.csproj"
+      "path": "../../../../rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj",
+      "msbuildProject": "../../../../rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -233,8 +233,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj": {
-              "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj"
+            "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj": {
+              "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj"
             }
           }
         }

@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\rtxdisam\rtxdisam.csproj" />
-    <None Include="..\..\..\..\isa_json\isa_134_json\*.json.zst" Link="isa_json\isa_134_json\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\..\..\isa_json\isa_102_json\*.json.zst" Link="isa_json\isa_102_json\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\..\..\..\rtxdiasm_modules\rtxdiasm-runtime\src\rtxdisam\rtxdisam.csproj" />
+    <None Include="..\..\..\..\rtxdiasm_modules\rtxdiasm-runtime\isa_json\isa_134_json\*.json.zst" Link="isa_json\isa_134_json\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\..\..\rtxdiasm_modules\rtxdiasm-runtime\isa_json\isa_102_json\*.json.zst" Link="isa_json\isa_102_json\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

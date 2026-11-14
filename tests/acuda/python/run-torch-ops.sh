@@ -21,8 +21,9 @@ fi
 if [[ -z "${RTXDISAM_LIBRARY:-}" ]]; then
     for candidate in \
         "$root/out/linux-x64/rtxdisam_native.so" \
+        "$root/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam.native/bin/Release/net8.0/linux-x64/native/rtxdisam_native.so" \
+        "$root/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam.native/bin/Debug/net8.0/linux-x64/native/rtxdisam_native.so" \
         "$root/src/rtxdisam.native/bin/Release/net8.0/linux-x64/native/rtxdisam_native.so" \
-        "$root/src/rtxdisam.native/bin/Debug/net8.0/linux-x64/native/rtxdisam_native.so" \
         "$acuda/librtxdisam_native.so"
     do
         if [[ -e "$candidate" ]]; then
