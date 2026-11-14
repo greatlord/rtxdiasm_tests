@@ -26,7 +26,7 @@ From a Linux tree with the ACuda release build:
 
 ```sh
 ACUDA_TORCH_PYTHON=/path/to/venv/bin/python \
-  src/acuda/tests/python/run-torch-ops.sh
+  rtxdiasm_tests/tests/acuda/python/run-torch-ops.sh
 ```
 
 The script points `ACUDA_CUDA_DRIVER`, `LD_PRELOAD` (cublasLt),

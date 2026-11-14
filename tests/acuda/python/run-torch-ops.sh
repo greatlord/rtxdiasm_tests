@@ -15,13 +15,14 @@ if [[ ! -e "$acuda/libcuda.so.1" ]]; then
     exit 1
 fi
 
-# Prefer the native lifter freshly built from this checkout; the
-# deployed out/linux-x64 copy can be stale relative to the source.
+# Prefer the published build (build_linux.sh), then a direct publish
+# tree.  The out/ copy is what the documented build refreshes; the
+# build-tree copy can be older than the sources.
 if [[ -z "${RTXDISAM_LIBRARY:-}" ]]; then
     for candidate in \
+        "$root/out/linux-x64/rtxdisam_native.so" \
         "$root/src/rtxdisam.native/bin/Release/net8.0/linux-x64/native/rtxdisam_native.so" \
         "$root/src/rtxdisam.native/bin/Debug/net8.0/linux-x64/native/rtxdisam_native.so" \
-        "$root/out/linux-x64/rtxdisam_native.so" \
         "$acuda/librtxdisam_native.so"
     do
         if [[ -e "$candidate" ]]; then
