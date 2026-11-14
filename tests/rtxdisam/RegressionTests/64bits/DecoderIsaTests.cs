@@ -5343,6 +5343,28 @@ internal static class DecoderIsaTests
         // prefix scans), not the active-lane mask.
         Check("SASS to PTX SR_LEMASK",
             lemaskPtx.Contains("mov.u32 %r3, %lanemask_le;"));
+        var gemaskSection = new rtxdisam.SassSection();
+        gemaskSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "S2R",
+            Operands = { "R3", "SR_GEMASK" },
+        });
+        string gemaskPtx = rtxdisam.SassToPtx.Translate(
+            gemaskSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
+        // CUB's scan uses the lanes-above-or-equal mask to force a
+        // findable bit into its warp ballot.
+        Check("SASS to PTX SR_GEMASK",
+            gemaskPtx.Contains("mov.u32 %r3, %lanemask_ge;"));
+        var nanosleepSection = new rtxdisam.SassSection();
+        nanosleepSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "NANOSLEEP",
+            Operands = { "R4" },
+        });
+        string nanosleepPtx = rtxdisam.SassToPtx.Translate(
+            nanosleepSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
+        Check("SASS to PTX NANOSLEEP",
+            nanosleepPtx.Contains("nanosleep.u32 %r4;"));
         var addressPairSection = new rtxdisam.SassSection();
         addressPairSection.Nodes.Add(new rtxdisam.SassInstruction
         {

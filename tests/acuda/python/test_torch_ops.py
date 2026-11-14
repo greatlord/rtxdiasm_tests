@@ -83,6 +83,19 @@ def main():
         check(f"var {dt}", x.var(1), x.cpu().var(1), rtol=1e-4, atol=1e-4)
         check(f"std {dt}", x.std(1), x.cpu().std(1), rtol=1e-4, atol=1e-4)
 
+    # --- single-slice scans (CUB DeviceScan through the runtime API) --
+    # These take CUB's one-tile path; it exercises nanosleep and the
+    # lane-mask special registers in the decoupled-lookback scan.
+    for shape, dim in (((1, 8), 1), ((1000,), 0), ((1025,), 0)):
+        x = torch.randn(*shape, device=DEV)
+        check(f"cumsum single slice {shape}", torch.cumsum(x, dim),
+              torch.cumsum(x.cpu(), dim), rtol=1e-5, atol=1e-5)
+
+    # Longer single-slice scans (>1025 elements) go through CUB's
+    # multi-tile decoupled lookback, which is still unreliable; it is
+    # left out of the suite because a failed launch leaves the context
+    # in an error state.
+
     # --- reductions -------------------------------------------------
     for dt in (torch.float32, torch.float64):
         x = torch.randn(16, 64, device=DEV, dtype=dt)
