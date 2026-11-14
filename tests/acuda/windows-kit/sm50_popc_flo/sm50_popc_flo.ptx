@@ -1,0 +1,27 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64 in_addr;
+    .reg .u64 out_addr;
+    .reg .u32 value;
+    .reg .u32 count;
+    .reg .u32 leading;
+    .reg .u32 highest;
+
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+
+    ld.global.u32 value, [in_addr];
+    popc.b32 count, value;
+    clz.b32 leading, value;
+    sub.u32 highest, 31, leading;
+    add.u32 count, count, highest;
+    st.global.u32 [out_addr], count;
+    ret;
+}

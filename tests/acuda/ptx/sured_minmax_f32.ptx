@@ -1,0 +1,27 @@
+// Storage-image f32 min/max reductions on an R32f surface. The host
+// checks the surface contents after the launch.
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry sured_minmax_f32(.param .surfref surf, .param .u64 out)
+{
+    .reg .u32 %r<3>;
+    .reg .u64 %rd<2>;
+    .reg .f32 %f<2>;
+    ld.param.u64 %rd1, [out];
+    mov.u32 %r1, 0;
+    mov.u32 %r2, 0;
+    mov.f32 %f1, 0f40A00000; // 5.0
+    sured.p.min.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    mov.u32 %r1, 1;
+    mov.f32 %f1, 0f41C80000; // 25.0
+    sured.p.max.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    mov.u32 %r1, 2;
+    mov.f32 %f1, 0f420C0000; // 35.0
+    sured.p.min.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    mov.u32 %r1, 3;
+    sured.p.max.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    mov.u32 %r1, 1;
+    st.global.u32 [%rd1], %r1;
+    ret;
+}

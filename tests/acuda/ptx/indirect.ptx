@@ -1,0 +1,20 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.func (.reg .u64 out) addone(.reg .u64 x)
+{
+    add.u64 out, x, 1;
+    ret;
+}
+.visible .entry indirect(.param .u64 input, .param .u64 output)
+{
+    .reg .u64 in_addr, out_addr, val, r, f;
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+    ld.global.u64 val, [in_addr];
+    mov.u64 f, addone;
+L_targets: .calltargets addone;
+    call (r), f, (val), L_targets;
+    st.u64 [out_addr], r;
+    ret;
+}

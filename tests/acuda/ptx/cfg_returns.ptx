@@ -1,0 +1,20 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cfg_returns(.param .u64 io)
+{
+    .reg .u64 rd;
+    .reg .u32 r1, r2;
+    .reg .pred p0;
+    ld.param.u64 rd, [io];
+    ld.global.u32 r1, [rd];
+    setp.eq.u32 p0, r1, 0;
+    @p0 bra ZR;
+    mov.u32 r2, 7;
+    st.global.u32 [rd], r2;
+    ret;
+ZR:
+    mov.u32 r2, 9;
+    st.global.u32 [rd], r2;
+    ret;
+}

@@ -1,0 +1,23 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_small(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .u16 u;
+    .reg .s8 s8;
+    .reg .s16 s16;
+    .reg .f32 f;
+    .reg .b16 h;
+    ld.param.u64 a, [p];
+    ld.u16 u, [a];
+    cvt.rn.f32.u16 f, u;
+    st.f32 [a+8], f;
+    ld.u8 s8, [a+2];
+    cvt.rn.f32.s8 f, s8;
+    st.f32 [a+12], f;
+    ld.s16 s16, [a+4];
+    cvt.rn.f16.s16 h, s16;
+    st.u16 [a+16], h;
+    ret;
+}

@@ -1,0 +1,133 @@
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .shared .b64 bar;
+.visible .shared .u32 d0;
+.visible .shared .u32 d1;
+.visible .shared .u32 d2;
+.visible .shared .u32 d3;
+.visible .shared .u32 d4;
+.visible .shared .u32 d5;
+.visible .shared .u32 d6;
+.visible .shared .u32 d7;
+.visible .shared .u32 d8;
+.visible .entry red_async_shared(.param .u64 p)
+{
+    .reg .u64 r;
+    .reg .u32 v, ok;
+    .reg .pred done;
+    ld.param.u64 r, [p];
+    mbarrier.init.shared::cta.b64 [bar], 1;
+    mov.u32 v, 0;
+    st.shared.u32 [d0], v;
+    mov.u32 v, 7;
+    st.shared.u32 [d1], v;
+    mov.u32 v, 2;
+    st.shared.u32 [d2], v;
+    mov.u32 v, 0xff;
+    st.shared.u32 [d3], v;
+    mov.u32 v, 0x10;
+    st.shared.u32 [d4], v;
+    mov.u32 v, 0x0f;
+    st.shared.u32 [d5], v;
+    mov.u32 v, 5;
+    st.shared.u32 [d6], v;
+    mov.u32 v, 5;
+    st.shared.u32 [d7], v;
+    mov.u32 v, 0;
+    st.shared.u32 [d8], v;
+    mov.u32 ok, 1;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 5;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.add.u32 [d0], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 3;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.min.u32 [d1], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 1;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 9;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.max.u32 [d2], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 0x0f;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.and.b32 [d3], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 1;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 0x20;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.or.b32 [d4], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 0x35;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.xor.b32 [d5], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 1;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 9;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.inc.u32 [d6], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.u32 v, 9;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.dec.u32 [d7], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 1;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    mbarrier.expect_tx.shared::cta.b64 [bar], 4;
+    mov.s32 v, -7;
+    red.async.relaxed.cluster.shared::cluster.mbarrier::complete_tx::bytes.add.s32 [d8], v, [bar];
+    mbarrier.arrive.shared::cta.b64 _, [bar];
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    and.b32 ok, ok, v;
+
+    st.global.u32 [r], ok;
+    ld.shared.u32 v, [d0];
+    st.global.u32 [r+4], v;
+    ld.shared.u32 v, [d1];
+    st.global.u32 [r+8], v;
+    ld.shared.u32 v, [d2];
+    st.global.u32 [r+12], v;
+    ld.shared.u32 v, [d3];
+    st.global.u32 [r+16], v;
+    ld.shared.u32 v, [d4];
+    st.global.u32 [r+20], v;
+    ld.shared.u32 v, [d5];
+    st.global.u32 [r+24], v;
+    ld.shared.u32 v, [d6];
+    st.global.u32 [r+28], v;
+    ld.shared.u32 v, [d7];
+    st.global.u32 [r+32], v;
+    ld.shared.u32 v, [d8];
+    st.global.u32 [r+36], v;
+    ret;
+}

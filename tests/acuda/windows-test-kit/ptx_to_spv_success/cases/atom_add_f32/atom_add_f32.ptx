@@ -1,0 +1,17 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(
+    .param .u64 output
+)
+{
+    .reg .u64 out_addr;
+    .reg .f32 old;
+
+    ld.param.u64 out_addr, [output];
+    st.global.f32 [out_addr], 1.5;
+    atom.global.add.f32 old, [out_addr], 2.25;
+    st.global.f32 [out_addr+4], old;
+    ret;
+}

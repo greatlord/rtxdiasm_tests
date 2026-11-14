@@ -1,0 +1,23 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cfg_irreducible(.param .u64 io)
+{
+    .reg .u64 rd;
+    .reg .u32 r0, r1;
+    .reg .pred p0;
+    .reg .pred p1;
+    ld.param.u64 rd, [io];
+    ld.global.u32 r1, [rd];
+    mov.u32 r0, 0;
+    setp.lt.u32 p0, r0, r1;
+    @p0 bra B;
+A:
+    add.u32 r0, r0, 1;
+B:
+    add.u32 r0, r0, 2;
+    setp.lt.u32 p1, r0, r1;
+    @p1 bra A;
+    st.global.u32 [rd], r0;
+    ret;
+}

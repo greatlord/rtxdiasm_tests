@@ -1,0 +1,23 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.visible .entry brx_pred(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .u32 idx, r;
+    .reg .pred p;
+    ld.param.u64 base, [data];
+    ld.global.u32 idx, [base];
+    setp.lt.u32 p, idx, 2;
+ts: .branchtargets L0, L1;
+    @p brx.idx idx, ts;
+    mov.u32 r, 0x99;
+    bra Lend;
+L0: mov.u32 r, 0x10;
+    bra Lend;
+L1: mov.u32 r, 0x20;
+    bra Lend;
+Lend:
+    st.u32 [base+8], r;
+    ret;
+}

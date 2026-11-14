@@ -1,0 +1,34 @@
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .shared .b64 bar;
+.visible .entry mbarrier_tx(.param .u64 p)
+{
+    .reg .u64 r, state;
+    .reg .u32 pc, v;
+    .reg .pred done;
+    ld.param.u64 r, [p];
+    mbarrier.init.shared::cta.b64 [bar], 4;
+    mbarrier.expect_tx.shared::cta.b64 [bar], 8;
+    mbarrier.arrive.noComplete.shared::cta.b64 state, [bar], 1;
+    mbarrier.pending_count.b64 pc, state;
+    st.global.u32 [r], pc;
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+4], v;
+    mbarrier.try_wait.shared::cta.b64 done, [bar], state;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+8], v;
+    mbarrier.arrive.shared::cta.b64 _, [bar], 3;
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+12], v;
+    mbarrier.complete_tx.shared::cta.b64 [bar], 8;
+    mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+16], v;
+    mbarrier.try_wait.shared::cta.b64 done, [bar], state;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+20], v;
+    ret;
+}

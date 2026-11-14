@@ -1,0 +1,44 @@
+// ACUDA-EXTENSION: unresolved .extern .func host call; ptxas needs a companion module
+.version 6.5
+.target sm_30
+.address_size 64
+.extern .func (.param .align 16 .b8 func_retval0[16]) foobar
+(
+    .param .b64 value
+);
+.func (.reg .u64 out) via_a(.reg .u64 x)
+{
+    add.u64 out, x, 0x10;
+    ret;
+}
+.func (.reg .u64 out) via_b(.reg .u64 x)
+{
+    add.u64 out, x, 0x20;
+    ret;
+}
+.global .u64 tbl[2] = { via_a, via_b };
+.visible .entry hostcall_dispatch(.param .u64 input, .param .u64 output)
+{
+    .reg .u64 in_addr, out_addr, val, r, f, p, off, hv;
+    .reg .u32 idx;
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+    ld.global.u64 val, [in_addr];
+    {
+        .param .b64 p0;
+        st.param.b64 [p0+0], val;
+        .param .align 16 .b8 ret0[16];
+        call.uni (ret0), foobar, (p0);
+        ld.param.u64 hv, [ret0];
+    }
+    cvt.u32.u64 idx, hv;
+    sub.u32 idx, idx, 1;
+    mov.u64 p, tbl;
+    mul.wide.u32 off, idx, 8;
+    add.u64 p, p, off;
+    ld.global.u64 f, [p];
+tgt: .calltargets via_a, via_b;
+    call.uni (r), f, (hv), tgt;
+    st.u64 [out_addr], r;
+    ret;
+}

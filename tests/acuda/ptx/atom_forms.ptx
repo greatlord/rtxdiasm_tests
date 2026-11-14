@@ -1,0 +1,41 @@
+.version 8.6
+.target sm_90
+.address_size 64
+.shared .u32 sh[2];
+.visible .entry atom_forms(.param .u64 io)
+{
+    .reg .u64 rd, pol;
+    .reg .u32 u, old;
+    .reg .f64 f, oldf;
+    ld.param.u64 rd, [io];
+    mov.f64 f, 0d4002000000000000;
+    atom.add.f64 oldf, [rd], f;
+    st.global.f64 [rd+8], oldf;
+    mov.u32 u, 1;
+    atom.relaxed.cluster.global.add.u32 old, [rd+16], u;
+    st.global.u32 [rd+20], old;
+    mov.u32 u, 7;
+    st.shared.u32 [sh], u;
+    mov.u32 u, 9;
+    st.shared.u32 [sh+4], u;
+    mov.u32 u, 1;
+    atom.shared::cta.add.u32 old, [sh], u;
+    st.global.u32 [rd+24], old;
+    ld.shared.u32 u, [sh];
+    st.global.u32 [rd+28], u;
+    mov.u32 u, 1;
+    atom.shared::cluster.add.u32 old, [sh+4], u;
+    st.global.u32 [rd+32], old;
+    ld.shared.u32 u, [sh+4];
+    st.global.u32 [rd+36], u;
+    mov.u64 pol, 0;
+    mov.u32 u, 1;
+    atom.global.add.L2::cache_hint.u32 old, [rd+40], u, pol;
+    st.global.u32 [rd+44], old;
+    mov.u32 u, 1;
+    atom.global.exch.L2::cache_hint.b32 old, [rd+48], u, pol;
+    st.global.u32 [rd+52], old;
+    ld.global.u32 u, [rd+48];
+    st.global.u32 [rd+56], u;
+    ret;
+}

@@ -1,0 +1,16 @@
+.version 8.1
+.target sm_90
+.address_size 64
+
+.visible .entry k(.param .u64 out)
+{
+    .reg .u64 p;
+    .reg .b16 a, b, c, d;
+    ld.param.u64 p, [out];
+    mov.b16 a, 0x3c00;
+    mov.b16 b, 0x3c00;
+    mov.b16 c, 0x3c00;
+    fma.rn.oob.f16 d, a, b, c;
+    st.global.u16 [p], d;
+    ret;
+}

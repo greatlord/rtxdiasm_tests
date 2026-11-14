@@ -1,0 +1,21 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry surfp(.param .surfref surf, .param .u64 out)
+{
+    .reg .f32 f1, f2, f3, f4;
+    .reg .s32 x, y;
+    .reg .u32 w;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.f32 f1, 0f41100000;
+    mov.f32 f2, 0f41000000;
+    mov.f32 f3, 0f40E00000;
+    mov.f32 f4, 0f40C00000;
+    mov.s32 x, 1;
+    mov.s32 y, 1;
+    sust.p.2d.v4.b32.trap [surf, {x, y}], {f1, f2, f3, f4};
+    suq.width.b32 w, [surf];
+    st.global.u32 [p], w;
+    ret;
+}

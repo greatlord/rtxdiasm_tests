@@ -1,0 +1,66 @@
+// cvt.rni/rzi/rmi/rpi float->int (plus .ftz) and cvt.rmi/rpi
+// f32.f32, verified on-GPU against IEEE trunc/floor/ceil/nearest-even with
+// PTX saturation (NaN -> 0, out of range -> INT_MIN/INT_MAX).
+// 32 lanes: 5 int words at out+20t, 2 f32-pattern words at
+// out+640+8t (224 words total).
+.version 8.6
+.target sm_70
+.address_size 64
+
+.global .align 4 .b32 in_g[32] = {
+    3244084429, 1095657062, 1075838976, 1080033280, 3223322624, 3227516928, 1056964608, 3204448256,
+    0, 2147483648, 1065351538, 3212835186, 1065353216, 3212836864, 1069547520, 3217031168,
+    2143289345, 4290772992, 2139095040, 4286578688, 1325400063, 3472883712, 1328730206, 3476213854,
+    1258291202, 1109917696, 3257401344, 228737632, 2376221280, 1123477881, 3270961529, 1317011456
+};
+
+.global .align 4 .b32 in2_g[32] = {
+    1075838976, 1080033280, 3223322624, 3227516928, 1096600781, 3244084429, 1123477881, 3270961529,
+    1065353216, 3212836864, 1109917696, 3257401344, 228737632, 2376221280, 1621981420, 3769465068,
+    1258291202, 3405774850, 1061158912, 1089470464, 3236954112, 507307272, 2654790920, 1266679808,
+    3414163456, 1036831949, 1065351538, 3217031168, 1084751872, 3232235520, 3208642560, 3184315597
+};
+
+.visible .entry cvt_rnd(.param .u64 output)
+{
+    .reg .u32           %t;
+    .reg .u64           %out, %addr, %base;
+    .reg .f32           %x, %y, %w0, %w1;
+    .reg .b32           %r0, %r1, %r2, %r3, %r4;
+
+    ld.param.u64        %out, [output];
+    mov.u32             %t, %tid.x;
+
+    mul.wide.u32        %addr, %t, 4;
+    mov.u64             %base, in_g;
+    add.u64             %base, %base, %addr;
+    ld.f32              %x, [%base];
+
+    cvt.rni.s32.f32     %r0, %x;
+    cvt.rzi.s32.f32     %r1, %x;
+    cvt.rmi.s32.f32     %r2, %x;
+    cvt.rpi.s32.f32     %r3, %x;
+    cvt.rpi.ftz.s32.f32 %r4, %x;
+
+    mul.wide.u32        %addr, %t, 20;
+    add.u64             %addr, %out, %addr;
+    st.b32              [%addr], %r0;
+    st.b32              [%addr+4], %r1;
+    st.b32              [%addr+8], %r2;
+    st.b32              [%addr+12], %r3;
+    st.b32              [%addr+16], %r4;
+
+    mul.wide.u32        %addr, %t, 4;
+    mov.u64             %base, in2_g;
+    add.u64             %base, %base, %addr;
+    ld.f32              %y, [%base];
+    cvt.rmi.f32.f32     %w0, %y;
+    cvt.rpi.f32.f32     %w1, %y;
+
+    mul.wide.u32        %addr, %t, 8;
+    add.u64             %addr, %addr, 640;
+    add.u64             %addr, %out, %addr;
+    st.f32              [%addr], %w0;
+    st.f32              [%addr+4], %w1;
+    ret;
+}

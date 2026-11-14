@@ -1,0 +1,24 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry surf_mixed_types(.param .u64 hptr, .param .u64 out)
+{
+    .reg .u64 h2, h3, hp, p;
+    .reg .u32 r0, r1, w;
+    .reg .s32 x, y, z;
+    ld.param.u64 hp, [hptr];
+    ld.param.u64 p, [out];
+    ld.global.u64 h2, [hp];
+    ld.global.u64 h3, [hp+8];
+    mov.s32 x, 4;
+    mov.s32 y, 0;
+    suld.b.2d.b32.trap r0, [h2, {x, y}];
+    st.global.u32 [p], r0;
+    mov.s32 x, 0;
+    mov.s32 y, 0;
+    mov.s32 z, 1;
+    mov.u32 w, 0;
+    suld.b.3d.b32.trap r1, [h3, {x, y, z, w}];
+    st.global.u32 [p+4], r1;
+    ret;
+}

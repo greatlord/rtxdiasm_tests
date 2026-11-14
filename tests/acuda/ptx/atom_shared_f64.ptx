@@ -1,0 +1,25 @@
+// Shared-memory f64 atomic add. The scalar-f64 shared view lets the
+// compiler declare the 8-byte shared variables as f64 and emit
+// OpAtomicFAddEXT (compile-only on devices without
+// shaderSharedFloat64AtomicAdd).
+.version 8.5
+.target sm_80
+.address_size 64
+.visible .shared .align 8 .f64 sh[2];
+.visible .entry atom_shared_f64(.param .u64 io)
+{
+    .reg .u64 %rd<2>;
+    .reg .f64 %fd<4>;
+    ld.param.u64 %rd1, [io];
+    mov.f64 %fd1, 0d0000000000000000;
+    st.shared.f64 [sh], %fd1;
+    st.shared.f64 [sh+8], %fd1;
+    bar.sync 0;
+    mov.f64 %fd2, 0d3FF0000000000000;
+    red.shared.add.f64 [sh], %fd2;
+    atom.shared.add.f64 %fd3, [sh+8], %fd2;
+    bar.sync 0;
+    ld.shared.f64 %fd1, [sh];
+    st.global.f64 [%rd1], %fd1;
+    ret;
+}

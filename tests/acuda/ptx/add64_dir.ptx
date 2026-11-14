@@ -1,0 +1,21 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed-rounding f64 add through the 128-bit software FMA.
+.visible .entry add64_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f64 a, b, r;
+    ld.param.u64 base, [data];
+    ld.f64 a, [base];
+    ld.f64 b, [base+8];
+    add.rp.f64 r, a, b;
+    st.f64 [base+16], r;
+    add.rm.f64 r, a, b;
+    st.f64 [base+24], r;
+    add.rz.f64 r, a, b;
+    st.f64 [base+32], r;
+    add.rn.f64 r, a, b;
+    st.f64 [base+40], r;
+    ret;
+}

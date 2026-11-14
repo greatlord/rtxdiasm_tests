@@ -1,0 +1,35 @@
+// Dense warp matmul mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64.
+// Buffer layout (words): A 0..63 (1 f64/lane), B 64..127 (1/lane),
+// C 128..255 (2/lane), D 256..383 (2/lane).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_f64(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .f64 %a, %b, %c<2>, %d<2>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f64 %a, [%pa];
+    ld.global.f64 %b, [%pa+256];
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f64 %c0, [%pa+512];
+    ld.global.f64 %c1, [%pa+520];
+
+    mma.sync.aligned.m8n8k4.row.col.f64.f64.f64.f64
+        {%d0,%d1}, {%a}, {%b}, {%c0,%c1};
+
+    st.global.f64 [%pa+1024], %d0;
+    st.global.f64 [%pa+1032], %d1;
+    ret;
+}

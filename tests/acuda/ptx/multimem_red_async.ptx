@@ -1,0 +1,16 @@
+.version 9.3
+.target sm_120
+.address_size 64
+.visible .entry multimem_red_async(.param .u64 p)
+{
+    .reg .u64 a, v64;
+    .reg .u32 one, two;
+    ld.param.u64 a, [p];
+    mov.u32 one, 1;
+    multimem.red.async.release.gpu.global.add.u32 [a], one;
+    mov.u32 two, 2;
+    multimem.red.async.release.sys.global.add.s32 [a+4], two;
+    mov.u64 v64, 3;
+    multimem.red.async.release.gpu.global.add.u64 [a+8], v64;
+    ret;
+}

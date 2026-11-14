@@ -1,0 +1,32 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_pack(.param .u64 out)
+{
+    .reg .u64 o;
+    .reg .s32 a, b, c;
+    .reg .b32 d;
+    ld.param.u64 o, [out];
+    mov.s32 a, 70000;
+    mov.s32 b, -5;
+    cvt.pack.sat.u16.s32 d, a, b; st.u32 [o], d;
+    mov.s32 a, 40000;
+    mov.s32 b, -40000;
+    cvt.pack.sat.s16.s32 d, a, b; st.u32 [o+4], d;
+    mov.s32 a, 300;
+    mov.s32 b, -1;
+    mov.s32 c, 0x12345678;
+    cvt.pack.sat.u8.s32.b32 d, a, b, c; st.u32 [o+8], d;
+    cvt.pack.sat.s8.s32.b32 d, a, b, c; st.u32 [o+12], d;
+    mov.s32 a, 20;
+    mov.s32 b, -1;
+    cvt.pack.sat.u4.s32.b32 d, a, b, c; st.u32 [o+16], d;
+    mov.s32 b, -9;
+    cvt.pack.sat.s4.s32.b32 d, a, b, c; st.u32 [o+20], d;
+    mov.s32 a, 5;
+    mov.s32 b, -1;
+    cvt.pack.sat.u2.s32.b32 d, a, b, c; st.u32 [o+24], d;
+    mov.s32 b, -3;
+    cvt.pack.sat.s2.s32.b32 d, a, b, c; st.u32 [o+28], d;
+    ret;
+}

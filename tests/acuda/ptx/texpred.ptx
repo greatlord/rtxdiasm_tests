@@ -1,0 +1,21 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry texpred(.param .texref tex, .param .u64 out)
+{
+    .reg .f32 s, t, r0, r1, r2, r3;
+    .reg .u32 w;
+    .reg .u64 p;
+    .reg .pred isres;
+    ld.param.u64 p, [out];
+    mov.f32 s, 0f3E800000;
+    mov.f32 t, 0f3E800000;
+    tex.2d.v4.f32.f32 {r0, r1, r2, r3}|isres, [tex, {s, t}];
+    st.global.f32 [p], r0;
+    st.global.f32 [p+4], r1;
+    st.global.f32 [p+8], r2;
+    st.global.f32 [p+12], r3;
+    selp.u32 w, 1, 0, isres;
+    st.global.u32 [p+16], w;
+    ret;
+}

@@ -1,0 +1,27 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry surf2d(.param .surfref surf, .param .u64 out)
+{
+    .reg .u32 r0, r1, w;
+    .reg .s32 x, y;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.s32 x, 4;
+    mov.s32 y, 0;
+    suld.b.2d.b32.trap r0, [surf, {x, y}];
+    st.global.u32 [p], r0;
+    mov.s32 x, 8;
+    mov.s32 y, 0;
+    mov.u32 r1, 999;
+    sust.b.2d.b32.trap [surf, {x, y}], r1;
+    mov.s32 x, 12;
+    mov.s32 y, 0;
+    mov.u32 r1, 5;
+    sured.b.add.2d.u32.trap [surf, {x, y}], r1;
+    suq.width.b32 w, [surf];
+    st.global.u32 [p+4], w;
+    suq.height.b32 w, [surf];
+    st.global.u32 [p+8], w;
+    ret;
+}

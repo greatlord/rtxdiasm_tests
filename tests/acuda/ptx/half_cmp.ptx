@@ -1,0 +1,49 @@
+// Half-precision set/setp comparison matrix (f16/f16x2, sm_53+).
+.version 8.0
+.target sm_86
+.address_size 64
+
+.visible .entry half_cmp(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .b16 %x, %y;
+    .reg .b32 %vx, %vy, %r;
+    .reg .pred %pf, %pg, %c;
+    .reg .f32 %z;
+
+    ld.param.u64 %rd, [p];
+    mov.b16 %x, 0x3C00;      // 1.0
+    mov.b16 %y, 0x4000;      // 2.0
+    mov.b32 %vx, 0x40003C00; // {1.0, 2.0}
+    mov.b32 %vy, 0x3C004000; // {2.0, 1.0}
+    mov.f32 %z, 0f00000000;
+    setp.eq.f32 %c, %z, 0f3f800000;
+
+    set.lt.u32.f16 %r, %x, %y;
+    st.global.u32 [%rd], %r;
+    set.gt.u32.f16 %r, %x, %y;
+    st.global.u32 [%rd+4], %r;
+    set.eq.u32.f16 %r, %x, %x;
+    st.global.u32 [%rd+8], %r;
+    set.lt.u32.f16x2 %r, %vx, %vy;
+    st.global.u32 [%rd+12], %r;
+    set.eq.f16x2.f16x2 %r, %vx, %vx;
+    st.global.u32 [%rd+16], %r;
+    setp.lt.f16 %pf, %x, %y;
+    selp.u32 %r, 1, 0, %pf;
+    st.global.u32 [%rd+20], %r;
+    setp.lt.f16x2 %pf|%pg, %vx, %vy;
+    selp.u32 %r, 1, 0, %pf;
+    st.global.u32 [%rd+24], %r;
+    selp.u32 %r, 1, 0, %pg;
+    st.global.u32 [%rd+28], %r;
+    setp.nan.f16 %pf, %x, %x;
+    selp.u32 %r, 1, 0, %pf;
+    st.global.u32 [%rd+32], %r;
+    set.lt.and.u32.f16 %r, %x, %y, %c;
+    st.global.u32 [%rd+36], %r;
+    setp.lt.or.f16 %pf, %x, %y, %c;
+    selp.u32 %r, 1, 0, %pf;
+    st.global.u32 [%rd+40], %r;
+    ret;
+}

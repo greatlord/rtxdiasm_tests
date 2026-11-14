@@ -1,0 +1,23 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.visible .entry brx(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .u32 idx, r;
+    ld.param.u64 base, [data];
+    ld.global.u32 idx, [base];
+ts: .branchtargets L0, L1, L2, L3;
+    brx.idx idx, ts;
+L0: mov.u32 r, 0x10;
+    bra Lend;
+L1: mov.u32 r, 0x20;
+    bra Lend;
+L2: mov.u32 r, 0x30;
+    bra Lend;
+L3: mov.u32 r, 0x40;
+    bra Lend;
+Lend:
+    st.u32 [base+8], r;
+    ret;
+}

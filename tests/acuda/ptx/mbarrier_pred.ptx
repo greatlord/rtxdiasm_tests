@@ -1,0 +1,20 @@
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .shared .b64 bar;
+.visible .entry mbarrier_pred(.param .u64 p)
+{
+    .reg .u64 r, state;
+    .reg .u32 pc, v;
+    .reg .pred t, done;
+    ld.param.u64 r, [p];
+    setp.eq.u32 t, 1, 1;
+    @t mbarrier.init.shared::cta.b64 [bar], 1;
+    @t mbarrier.arrive.shared::cta.b64 state, [bar];
+    @t mbarrier.pending_count.b64 pc, state;
+    st.global.u32 [r], pc;
+    @t mbarrier.try_wait.parity.shared::cta.b64 done, [bar], 0;
+    selp.u32 v, 1, 0, done;
+    st.global.u32 [r+4], v;
+    ret;
+}

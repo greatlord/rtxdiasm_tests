@@ -1,0 +1,52 @@
+// Dense warp matmul mma.sync.aligned.m8n8k4.row.col.f32.f16.f16.f32.
+// The instruction computes four independent 8x8x4 MMAs, one per lane
+// group. Buffer words: A 0..63 (2/lane), B 64..127 (2/lane),
+// C 128..383 (8/lane), D 384..639 (8/lane).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_m8n8k4_f16(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<2>, %b<2>;
+    .reg .f32 %c<8>, %d<8>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+    ld.global.b32 %b0, [%pa+256];
+    ld.global.b32 %b1, [%pa+260];
+
+    mad.wide.u32 %off, %lane, 32, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f32 %c0, [%pa+512];
+    ld.global.f32 %c1, [%pa+516];
+    ld.global.f32 %c2, [%pa+520];
+    ld.global.f32 %c3, [%pa+524];
+    ld.global.f32 %c4, [%pa+528];
+    ld.global.f32 %c5, [%pa+532];
+    ld.global.f32 %c6, [%pa+536];
+    ld.global.f32 %c7, [%pa+540];
+
+    mma.sync.aligned.m8n8k4.row.col.f32.f16.f16.f32
+        {%d0,%d1,%d2,%d3,%d4,%d5,%d6,%d7},
+        {%a0,%a1}, {%b0,%b1}, {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7};
+
+    st.global.f32 [%pa+1536], %d0;
+    st.global.f32 [%pa+1540], %d1;
+    st.global.f32 [%pa+1544], %d2;
+    st.global.f32 [%pa+1548], %d3;
+    st.global.f32 [%pa+1552], %d4;
+    st.global.f32 [%pa+1556], %d5;
+    st.global.f32 [%pa+1560], %d6;
+    st.global.f32 [%pa+1564], %d7;
+    ret;
+}

@@ -1,0 +1,32 @@
+// ACuda extension: f16x2 dot product with f32 accumulator.
+// Buffer words: A 0..63 (2/lane), B 64..127 (2/lane), C 128..159,
+// D 160..191.
+
+.version 8.5
+.target sm_80
+.address_size 64
+
+.visible .entry dot2(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane, %a, %b;
+    .reg .f32 %c, %d;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a, [%pa];
+    ld.global.b32 %b, [%pa+256];
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f32 %c, [%pa+512];
+
+    acuda.dot2.f32.f16 %d, %a, %b, %c;
+
+    st.global.f32 [%pa+640], %d;
+    ret;
+}

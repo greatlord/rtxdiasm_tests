@@ -1,0 +1,21 @@
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .entry cp_async_bulk(.param .u64 p)
+{
+    .shared .b32 sbuf[16];
+    .shared .b32 mbar[2];
+    .reg .u64 ip, op;
+    .reg .u32 n;
+    ld.param.u64 ip, [p];
+    add.u64 op, ip, 64;
+    mov.u32 n, 64;
+    cp.async.bulk.prefetch.L2.global [ip], n;
+    cp.async.bulk.shared::cta.global.mbarrier::complete_tx::bytes [sbuf], [ip], n, [mbar];
+    cp.async.bulk.commit_group;
+    cp.async.bulk.wait_group 0;
+    cp.async.bulk.global.shared::cta.bulk_group [op], [sbuf], n;
+    cp.async.bulk.commit_group;
+    cp.async.bulk.wait_group 0;
+    ret;
+}

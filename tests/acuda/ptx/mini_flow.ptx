@@ -1,0 +1,85 @@
+//
+// Stage 6 flow slice: selp/not/neg/min/max/sub.s64/setp.u64, negative
+// literals, .pragma, plus a guard early-exit, a middle skip with a join
+// phi, and a single-block self-loop. Must assemble with real ptxas AND
+// compile+launch correctly here. sm_80, exact grid, N=4096 with n=4000
+// (threads i>=n exit early and leave c[i]==0).
+//
+.version 8.6
+.target sm_80
+.address_size 64
+
+.visible .entry flowmini(
+    .param .u64 a,
+    .param .u64 b,
+    .param .u64 c,
+    .param .u32 n
+)
+{
+    .reg .u32 %r<16>;
+    .reg .u64 %rd<32>;
+    .reg .f32 %f<8>;
+    .reg .pred %p<8>;
+
+    ld.param.u64 %rd1, [a];
+    ld.param.u64 %rd2, [b];
+    ld.param.u64 %rd3, [c];
+    ld.param.u32 %r1, [n];
+    mov.u32 %r2, %tid.x;
+    mov.u32 %r3, %ctaid.x;
+    mov.u32 %r4, %ntid.x;
+    mad.lo.u32 %r5, %r3, %r4, %r2;
+    setp.ge.u32 %p1, %r5, %r1;
+    @%p1 bra EXIT;
+
+    mul.wide.u32 %rd4, %r5, 4;
+    add.u64 %rd5, %rd1, %rd4;
+    add.u64 %rd6, %rd2, %rd4;
+    add.u64 %rd7, %rd3, %rd4;
+    ld.global.f32 %f1, [%rd5];
+    ld.global.f32 %f2, [%rd6];
+    setp.gt.f32 %p2, %f1, %f2;
+    selp.f32 %f3, %f1, %f2, %p2;
+
+    cvt.s64.s32 %rd8, %r5;
+    max.s64 %rd9, %rd8, -3;
+    min.s64 %rd10, %rd9, 7;
+    sub.s64 %rd11, 7, %rd10;
+    neg.s64 %rd12, %rd11;
+    not.b64 %rd13, %rd12;
+    setp.lt.u64 %p3, %rd8, 5;
+    selp.u64 %rd14, %rd11, %rd13, %p3;
+    and.b64 %rd15, %rd14, 255;
+    add.u64 %rd16, %rd8, %rd15;
+    and.b64 %rd17, %rd16, 4095;
+    cvt.u32.u64 %r6, %rd17;
+    mul.wide.u32 %rd18, %r6, 4;
+    add.u64 %rd19, %rd2, %rd18;
+    ld.global.f32 %f4, [%rd19];
+    mov.f32 %f5, -1.5;
+
+    setp.eq.u64 %p4, %rd15, 0;
+    @%p4 bra TAIL;
+
+    mov.u32 %r7, 0;
+LOOP:
+    .pragma "nounroll";
+    cvt.u64.u32 %rd20, %r7;
+    add.u64 %rd21, %rd8, %rd20;
+    and.b64 %rd22, %rd21, 4095;
+    cvt.u32.u64 %r8, %rd22;
+    mul.wide.u32 %rd23, %r8, 4;
+    add.u64 %rd24, %rd2, %rd23;
+    ld.global.f32 %f6, [%rd24];
+    add.f32 %f5, %f5, %f6;
+    add.u32 %r7, %r7, 1;
+    setp.lt.u32 %p5, %r7, 2;
+    @%p5 bra LOOP;
+
+TAIL:
+    add.f32 %f7, %f3, %f5;
+    add.f32 %f7, %f7, %f4;
+    st.global.f32 [%rd7], %f7;
+EXIT:
+    ret;
+}

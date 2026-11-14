@@ -1,0 +1,64 @@
+//
+// Shared-memory slice: two static .shared variables (align 4 + align 8
+// parsing), mov-from-symbol bases, st/ld.shared.f32 with computed
+// offsets, and two full-CTA bar.sync rendezvous. Must assemble with
+// real ptxas AND compile+launch correctly here. sm_80, exact grid:
+// N=1024 threads in 4 blocks of 256 (per-workgroup isolation is the
+// point: tile index t = i & 255).
+//
+// Oracle: sh[t] = a[i]; sh2[t] = b[i]; after sync,
+// c[i] = sh[(t+1)&255] + sh2[t] = a[base+((t+1)&255)] + b[i].
+//
+.version 8.6
+.target sm_80
+.address_size 64
+
+.visible .shared .align 4 .b8 sh[1024];
+.visible .shared .align 8 .b8 sh2[256];
+
+.visible .entry shmem(
+    .param .u64 a,
+    .param .u64 b,
+    .param .u64 c
+)
+{
+    .reg .u32 %r<16>;
+    .reg .u64 %rd<16>;
+    .reg .f32 %f<8>;
+    .reg .pred %p<2>;
+
+    ld.param.u64 %rd1, [a];
+    ld.param.u64 %rd2, [b];
+    ld.param.u64 %rd3, [c];
+    mov.u32 %r1, %tid.x;
+    mov.u32 %r2, %ctaid.x;
+    mov.u32 %r3, %ntid.x;
+    mad.lo.u32 %r4, %r2, %r3, %r1;
+    and.b32 %r5, %r4, 255;
+    mul.wide.u32 %rd4, %r4, 4;
+    mul.wide.u32 %rd5, %r5, 4;
+    add.u64 %rd6, %rd1, %rd4;
+    add.u64 %rd7, %rd2, %rd4;
+    add.u64 %rd8, %rd3, %rd4;
+    ld.global.f32 %f1, [%rd6];
+    ld.global.f32 %f2, [%rd7];
+
+    mov.u64 %rd9, sh;
+    mov.u64 %rd10, sh2;
+    add.u64 %rd11, %rd9, %rd5;
+    add.u64 %rd12, %rd10, %rd5;
+    st.shared.f32 [%rd11], %f1;
+    st.shared.f32 [%rd12], %f2;
+    bar.sync 0;
+
+    add.u32 %r6, %r5, 1;
+    and.b32 %r7, %r6, 255;
+    mul.wide.u32 %rd13, %r7, 4;
+    add.u64 %rd14, %rd9, %rd13;
+    ld.shared.f32 %f3, [%rd14];
+    ld.shared.f32 %f4, [%rd12];
+    bar.sync 1;
+    add.f32 %f5, %f3, %f4;
+    st.global.f32 [%rd8], %f5;
+    ret;
+}

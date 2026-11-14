@@ -1,0 +1,40 @@
+.version 6.5
+.target sm_30
+.address_size 64
+
+.extern .func (.param .align 16 .b8 func_retval0[16]) foobar
+(
+    .param .b64 extern_func
+);
+
+.visible .entry extern_array(.param .u64 in_ptr, .param .u64 out_ptr)
+{
+    .reg .u64 in_addr, out_addr, ip, op, off, ooff, temp, temp2;
+    .reg .u32 i;
+    .reg .pred p;
+    ld.param.u64 in_addr, [in_ptr];
+    ld.param.u64 out_addr, [out_ptr];
+    mov.u32 i, 0;
+    mov.u64 off, 0;
+    mov.u64 ooff, 0;
+L:
+    setp.ge.u32 p, i, 5;
+    @p bra Lend;
+    add.u64 ip, in_addr, off;
+    ld.global.u64 temp, [ip];
+    {
+        .param .b64 param0;
+        st.param.b64 [param0], temp;
+        .param .align 16 .b8 retval0[16];
+        call.uni (retval0), foobar, (param0);
+        ld.param.u64 temp2, [retval0];
+    }
+    add.u64 op, out_addr, ooff;
+    st.global.u64 [op], temp2;
+    add.u64 off, off, 8;
+    add.u64 ooff, ooff, 8;
+    add.u32 i, i, 1;
+    bra L;
+Lend:
+    ret;
+}

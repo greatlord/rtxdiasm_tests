@@ -1,0 +1,35 @@
+// Exercises the ldmatrix_trans groundwork arms that no allowlisted
+// corpus file reaches yet, all on deterministic data:
+//   1. .v2.b64 global ld  (64-bit vector elements)
+//   2. .v2.b64 shared st/ld round-trip
+//   3. mov.b32 into a .v2.b16 register (bit-split into .x/.y)
+//   4. st.b16 of a .b16 component through a generic (param) pointer
+// Expected outputs are hand-computed from the global initializer.
+.version 6.5
+.target sm_75
+.address_size 64
+.global .u16 values_g[8] = {0x1111, 0x2222, 0x3333, 0x4444,
+                            0x5555, 0x6666, 0x7777, 0x8888};
+.shared .align 16 .u16 values_s[8];
+.visible .entry vec_ldst64(.param .u64 o)
+{
+    .reg .u64 out_addr;
+    .reg .u64 g_addr;
+    .reg .b32 s_addr;
+    .reg .u32 t;
+    .reg .u64 a, b;
+    .reg .v2.b16 h;
+    ld.param.u64 out_addr, [o];
+    mov.b64 g_addr, values_g;
+    ld.global.v2.b64 {a, b}, [g_addr];
+    mov.b32 s_addr, values_s;
+    st.shared.v2.b64 [s_addr], {a, b};
+    ld.shared.v2.b64 {a, b}, [s_addr];
+    st.u64 [out_addr], a;
+    st.u64 [out_addr+8], b;
+    cvt.u32.u64 t, a;
+    mov.b32 h, t;
+    st.b16 [out_addr+16], h.x;
+    st.b16 [out_addr+18], h.y;
+    ret;
+}

@@ -1,0 +1,19 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry txqlvl(.param .texref tex, .param .u64 out)
+{
+    .reg .f32 s, t, f0, f1, f2, f3;
+    .reg .u32 w, lod;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.f32 s, 0f3F000000;
+    mov.f32 t, 0f3F000000;
+    tex.2d.v4.f32.f32 {f0, f1, f2, f3}, [tex, {s, t}];
+    mov.u32 lod, 1;
+    txq.level.width.b32 w, [tex], lod;
+    st.global.u32 [p], w;
+    txq.level.height.b32 w, [tex], lod;
+    st.global.u32 [p+4], w;
+    ret;
+}

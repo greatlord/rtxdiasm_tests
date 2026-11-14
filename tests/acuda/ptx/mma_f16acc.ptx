@@ -1,0 +1,43 @@
+// Dense warp matmul mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16:
+// f16 multiplicands with f16 accumulators (C/D are two .f16x2 regs).
+// Buffer layout (words): A 0..127 (4/lane), B 128..191 (2/lane),
+// C 192..255 (2/lane), D 256..319 (2/lane).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_f16acc(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<4>, %b<2>, %c<2>, %d<2>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+    ld.global.b32 %a2, [%pa+8];
+    ld.global.b32 %a3, [%pa+12];
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %b0, [%pa+512];
+    ld.global.b32 %b1, [%pa+516];
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %c0, [%pa+768];
+    ld.global.b32 %c1, [%pa+772];
+
+    mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16
+        {%d0,%d1}, {%a0,%a1,%a2,%a3}, {%b0,%b1}, {%c0,%c1};
+
+    st.global.b32 [%pa+1024], %d0;
+    st.global.b32 [%pa+1028], %d1;
+    ret;
+}

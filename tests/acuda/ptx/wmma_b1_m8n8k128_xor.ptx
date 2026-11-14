@@ -1,0 +1,33 @@
+// Warp-level WMMA m8n8k128 b1 x b1 -> s32, XOR-POPC form.
+// A 0..127, B 128..255, C 256..511, D 512..767 (bytes).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_b1_m8n8k128_xor(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .u32 %sa, %sb, %sc;
+    .reg .b32 %a, %b;
+    .reg .s32 %c<2>, %d<2>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %sa, 16;
+    mov.u32 %sb, 16;
+    mov.u32 %sc, 8;
+
+    wmma.load.a.sync.aligned.m8n8k128.global.row.b1
+        {%a}, [%rd], %sa;
+    wmma.load.b.sync.aligned.m8n8k128.global.col.b1
+        {%b}, [%rd+128], %sb;
+    wmma.load.c.sync.aligned.m8n8k128.global.row.s32
+        {%c0,%c1}, [%rd+256], %sc;
+
+    wmma.mma.xor.popc.sync.aligned.row.col.m8n8k128.s32.b1.b1.s32
+        {%d0,%d1}, {%a}, {%b}, {%c0,%c1};
+
+    wmma.store.d.sync.aligned.m8n8k128.global.row.s32
+        [%rd+512], {%d0,%d1}, %sc;
+    ret;
+}

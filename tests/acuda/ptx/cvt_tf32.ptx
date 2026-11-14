@@ -1,0 +1,34 @@
+.version 8.6
+.target sm_90
+.address_size 64
+.visible .entry cvt_tf32(.param .u64 out)
+{
+    .reg .u64 o;
+    .reg .b32 r;
+    .reg .f32 f;
+    ld.param.u64 o, [out];
+    mov.f32 f, 0f3F801000;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o], r;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+4], r;
+    mov.f32 f, 0f3F803000;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+8], r;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+12], r;
+    mov.f32 f, 0f3F801001;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+16], r;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+20], r;
+    mov.f32 f, 0f3F800FFF;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+24], r;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+28], r;
+    mov.f32 f, 0fBF801000;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+32], r;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+36], r;
+    mov.f32 f, 0f7FC00001;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+40], r;
+    mov.f32 f, 0fFFC00001;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+44], r;
+    mov.f32 f, 0f7F7FFFFF;
+    cvt.rn.tf32.f32 r, f;  st.u32 [o+48], r;
+    mov.f32 f, 0f80000000;
+    cvt.rna.tf32.f32 r, f; st.u32 [o+52], r;
+    ret;
+}

@@ -1,0 +1,25 @@
+.version 9.3
+.target sm_120
+.address_size 64
+// multimem.* on a single GPU: the multimem address names this GPU's
+// own memory, so ld_reduce is a load, st is a store, and red is the
+// matching atomic reduction.
+.visible .entry multimem_ldst(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .u32 d0, d1, v;
+    .reg .f32 f0;
+    ld.param.u64 a, [p];
+    multimem.ld_reduce.relaxed.gpu.global.add.u32 d0, [a];
+    multimem.ld_reduce.relaxed.gpu.global.max.s32 d1, [a+4];
+    multimem.st.global.u32 [a+8], d0;
+    mov.u32 v, 7;
+    multimem.red.relaxed.gpu.global.add.u32 [a+12], v;
+    mov.u32 v, 3;
+    multimem.st.async.release.gpu.global.u32 [a+16], v;
+    multimem.ld_reduce.relaxed.gpu.global.add.f32 f0, [a+20];
+    st.global.f32 [a+24], f0;
+    st.global.u32 [a], d0;
+    st.global.u32 [a+4], d1;
+    ret;
+}

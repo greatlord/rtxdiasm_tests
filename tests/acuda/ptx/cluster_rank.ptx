@@ -1,0 +1,19 @@
+.version 9.3
+.target sm_120
+.address_size 64
+// Single-CTA cluster approximation: the local rank is 0 and mapa maps a
+// shared address to itself (the target rank is ignored).
+.visible .entry cluster_rank(.param .u64 p)
+{
+    .reg .u64 a, d64;
+    .reg .u32 d32, sh;
+    ld.param.u64 a, [p];
+    getctarank.shared::cluster.u32 d32, a;
+    st.global.u32 [a], d32;
+    getctarank.u64 d64, a;
+    st.global.u64 [a+8], d64;
+    mov.u32 sh, 123;
+    mapa.shared::cluster.u32 d32, sh, 3;
+    st.global.u32 [a+4], d32;
+    ret;
+}

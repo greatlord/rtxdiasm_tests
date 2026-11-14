@@ -1,0 +1,35 @@
+// ACUDA-EXTENSION: unresolved .extern .func host call; ptxas needs a companion module
+.version 6.5
+.target sm_30
+.address_size 64
+.global .b32 g[2] = {0x5678, 0};
+.extern .func (.param .align 16 .b8 func_retval0[16]) foobar
+(
+    .param .b64 value
+);
+.visible .entry hostcall_gimg(.param .u64 input, .param .u64 output)
+{
+    .reg .u32 tid;
+    .reg .u64 in_addr, out_addr, gp, p, val, result, loaded, idx, slot;
+    .reg .pred pc;
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+    ld.global.u64 val, [in_addr];
+    mov.u64 gp, g;
+    mov.u32 tid, %tid.x;
+    setp.eq.u32 pc, tid, 0;
+    selp.u64 p, in_addr, gp, pc;
+    {
+        .param .b64 p0;
+        st.param.b64 [p0+0], val;
+        .param .align 16 .b8 ret0[16];
+        call.uni (ret0), foobar, (p0);
+        ld.param.u64 result, [ret0];
+    }
+    ld.u64 loaded, [p];
+    cvt.u64.u32 idx, tid;
+    shl.b64 idx, idx, 3;
+    add.u64 slot, out_addr, idx;
+    st.u64 [slot], loaded;
+    ret;
+}

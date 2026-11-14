@@ -1,0 +1,49 @@
+.version 9.3
+.target sm_120
+.address_size 64
+.visible .shared .b64 bar;
+.visible .entry mbarrier_layout(.param .u64 p)
+{
+    .reg .u64 r, state;
+    .reg .u32 v0, v1, v2, v3, t;
+    .reg .pred p1, p0, is0, not0;
+    ld.param.u64 r, [p];
+    mov.u32 t, %tid.x;
+    setp.eq.u32 is0, t, 0;
+    not.pred not0, is0;
+
+    @is0 mbarrier.init.layout::v1.shared::cta.b64 [bar], 4;
+    bar.sync 0;
+
+    mbarrier.check_layout.layout::v1.shared::cta.b64 p1, [bar];
+    selp.u32 v0, 1, 0, p1;
+
+    mbarrier.check_layout.layout::v0.shared::cta.b64 p0, [bar];
+    selp.u32 v1, 1, 0, p0;
+
+    // First phase: one thread drops, the other three arrive.
+    @is0 mbarrier.arrive_drop.shared::cta.b64 state, [bar];
+    @not0 mbarrier.arrive.shared::cta.b64 state, [bar];
+
+wait0:
+    mbarrier.try_wait.parity.shared::cta.b64 p1, [bar], 0;
+    @!p1 bra wait0;
+    selp.u32 v2, 1, 0, p1;
+
+    // The drop reduced the expected count to three; the remaining
+    // threads complete the next phase without the dropping thread.
+    @not0 mbarrier.arrive.shared::cta.b64 state, [bar];
+
+wait1:
+    mbarrier.try_wait.parity.shared::cta.b64 p1, [bar], 1;
+    @!p1 bra wait1;
+    selp.u32 v3, 1, 0, p1;
+
+    @not0 bra done;
+    st.global.u32 [r], v0;
+    st.global.u32 [r+4], v1;
+    st.global.u32 [r+8], v2;
+    st.global.u32 [r+12], v3;
+done:
+    ret;
+}

@@ -1,0 +1,10 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.visible .entry nested(.param .u64 out)
+{
+    .reg .u64 o;
+    ld.param.u64 o, [out];
+    st.global.u32 [o], 7;
+    ret;
+}

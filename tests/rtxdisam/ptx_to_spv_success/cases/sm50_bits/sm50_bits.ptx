@@ -1,0 +1,30 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64 in_addr;
+    .reg .u64 out_addr;
+    .reg .u32 a;
+    .reg .u32 b;
+    .reg .u32 extracted;
+    .reg .u32 inserted;
+    .reg .u32 permuted;
+
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+
+    ld.global.u32 a, [in_addr];
+    ld.global.u32 b, [in_addr+4];
+    bfe.u32 extracted, a, 5, 3;
+    bfi.b32 inserted, a, b, 5, 3;
+    prmt.b32 permuted, a, b, 0x5410;
+    st.global.u32 [out_addr], extracted;
+    st.global.u32 [out_addr+4], inserted;
+    st.global.u32 [out_addr+8], permuted;
+    ret;
+}

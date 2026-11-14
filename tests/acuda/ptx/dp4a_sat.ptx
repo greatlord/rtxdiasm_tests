@@ -1,0 +1,62 @@
+// Saturating four-way byte dot (ACuda extension; ptxas has no .sat
+// dp4a). Covers signed/unsigned/mixed forms, normal values and both
+// overflow directions.
+.version 8.5
+.target sm_80
+.address_size 64
+.visible .entry dp4a_sat(.param .u64 out)
+{
+    .reg .u64 %rd<2>;
+    .reg .u32 %r<20>;
+    ld.param.u64 %rd1, [out];
+
+    mov.u32 %r1, 0x01010101;
+    mov.u32 %r2, 0x01010101;
+    mov.u32 %r3, 10;
+    acuda.dp4a.sat.s32.s32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1], %r4;
+
+    mov.u32 %r1, 0x7f7f7f7f;
+    mov.u32 %r2, 0x7f7f7f7f;
+    mov.u32 %r3, 0x7ffffff0;
+    acuda.dp4a.sat.s32.s32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+4], %r4;
+
+    mov.u32 %r1, 0x80808080;
+    mov.u32 %r2, 0x7f7f7f7f;
+    mov.u32 %r3, 0x80000010;
+    acuda.dp4a.sat.s32.s32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+8], %r4;
+
+    mov.u32 %r1, 0xffffffff;
+    mov.u32 %r2, 0xffffffff;
+    mov.u32 %r3, 0xfffffff0;
+    acuda.dp4a.sat.u32.u32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+12], %r4;
+
+    mov.u32 %r1, 0x02020202;
+    mov.u32 %r2, 0x03030303;
+    mov.u32 %r3, 1;
+    acuda.dp4a.sat.u32.u32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+16], %r4;
+
+    mov.u32 %r1, 0xffffffff;
+    mov.u32 %r2, 0x01010101;
+    mov.u32 %r3, 5;
+    acuda.dp4a.sat.s32.u32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+20], %r4;
+
+    mov.u32 %r1, 0x01010101;
+    mov.u32 %r2, 0xffffffff;
+    mov.u32 %r3, 5;
+    acuda.dp4a.sat.u32.s32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+24], %r4;
+
+    mov.u32 %r1, 0x80808080;
+    mov.u32 %r2, 0x02020202;
+    mov.u32 %r3, 0x80000000;
+    acuda.dp4a.sat.s32.u32 %r4, %r1, %r2, %r3;
+    st.global.u32 [%rd1+28], %r4;
+
+    ret;
+}

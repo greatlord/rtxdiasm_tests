@@ -1,0 +1,215 @@
+//
+// Narrow-types slice: .u8/.s8/.u16 storage (ld/st global+shared,
+// sub-word extract + RMW), full integer cvt matrix, setp.u16/.s16,
+// selp/add/mul/neg/cvt f16 (halves as bits in .b16/.f16 regs),
+// .b16 logic ops. Must assemble with real ptxas AND compile+launch
+// correctly here. sm_80, exact grid, N=4096, straight-line (kind 0).
+//
+// Oracle (host C, exact): u=a[i] (0..199), s=(int8)b[i] (-20..20),
+// q=u/7, r=u%7, sq=s/7, sr=s%7, d=q|((sq+4)<<6)|(r<<20)|((sr+16)<<26),
+// wh=cc[i], e=wh+q+(u&15), n8=(u*3+1)&0xFF (strict+lenient stores),
+// n16=(u*1000+1)&0xFFFF. f16 path: s16=a+b, p=a*b (exact halves,
+// computed twice: .b16 and .f16 regs with identical results; the
+// F16 shadow differences fold to +0.0), z=s+p, hs=(a<b)?s:p; f=z,
+// h=hs. Lanes i<8 override (f,h) with rounded immediates: tie
+// 0x3C00, roundup 0x3C01, overflow 0x7C00, negzero 0x8000, nan
+// 0xFE00, denormal 0x0080, neg 0xC100, flush 0.
+//
+.version 8.6
+.target sm_80
+.address_size 64
+
+.visible .shared .b8 shb[4096];
+.visible .shared .b8 shh[8192];
+.visible .shared .b8 shs[4096];
+
+.visible .entry narrow(
+    .param .u64 a,
+    .param .u64 b,
+    .param .u64 cc,
+    .param .u64 d,
+    .param .u64 e,
+    .param .u64 f,
+    .param .u64 g,
+    .param .u64 gg,
+    .param .u64 h,
+    .param .u64 n8,
+    .param .u64 n8b,
+    .param .u64 n16
+)
+{
+    .reg .u8 %b<8>;
+    .reg .s8 %sb<4>;
+    .reg .b16 %bh<16>;
+    .reg .u16 %h<16>;
+    .reg .u32 %r<32>;
+    .reg .u64 %rd<32>;
+    .reg .f16 %x<8>;
+    .reg .f32 %f<16>;
+    .reg .pred %p<16>;
+
+    ld.param.u64 %rd1, [a];
+    ld.param.u64 %rd2, [b];
+    ld.param.u64 %rd3, [cc];
+    ld.param.u64 %rd4, [d];
+    ld.param.u64 %rd5, [e];
+    ld.param.u64 %rd6, [f];
+    ld.param.u64 %rd7, [g];
+    ld.param.u64 %rd8, [gg];
+    ld.param.u64 %rd9, [h];
+    ld.param.u64 %rd10, [n8];
+    ld.param.u64 %rd11, [n8b];
+    ld.param.u64 %rd12, [n16];
+    mov.u32 %r1, %tid.x;
+    mov.u32 %r2, %ctaid.x;
+    mov.u32 %r3, %ntid.x;
+    mad.lo.u32 %r4, %r2, %r3, %r1;
+    cvt.u64.u32 %rd13, %r4;
+
+    // u8/s8 loads; shared narrow roundtrips feed the path.
+    add.u64 %rd14, %rd1, %rd13;
+    ld.global.u8 %b1, [%rd14];
+    add.u64 %rd15, %rd2, %rd13;
+    ld.global.s8 %sb1, [%rd15];
+    mov.u64 %rd16, shb;
+    add.u64 %rd17, %rd16, %rd13;
+    st.shared.u8 [%rd17], %b1;
+    ld.shared.u8 %b3, [%rd17];
+    mov.u64 %rd18, shs;
+    add.u64 %rd19, %rd18, %rd13;
+    st.shared.s8 [%rd19], %sb1;
+    ld.shared.s8 %sb3, [%rd19];
+    cvt.u32.u8 %r5, %b3;
+    cvt.u32.s8 %r6, %sb3;
+    // Lenient u8 load into a u32 register (same value).
+    ld.global.u8 %r7, [%rd14];
+    div.u32 %r8, %r7, 7;
+    rem.u32 %r9, %r7, 7;
+    div.s32 %r10, %r6, 7;
+    rem.s32 %r11, %r6, 7;
+    add.u32 %r12, %r11, 16;
+    shl.b32 %r13, %r9, 20;
+    shl.b32 %r14, %r12, 26;
+    or.b32 %r15, %r8, %r13;
+    or.b32 %r16, %r15, %r14;
+    add.u32 %r17, %r10, 4;
+    shl.b32 %r18, %r17, 6;
+    or.b32 %r19, %r16, %r18;
+    mul.wide.u32 %rd22, %r4, 4;
+    add.u64 %rd23, %rd4, %rd22;
+    st.global.u32 [%rd23], %r19;
+
+    // and.b16 chain (over the roundtripped value) + u64 side.
+    cvt.u16.u8 %h1, %b3;
+    mov.u64 %rd18, shh;
+    shl.b64 %rd19, %rd13, 1;
+    add.u64 %rd20, %rd18, %rd19;
+    st.shared.u16 [%rd20], %h1;
+    ld.shared.u16 %h2, [%rd20];
+    and.b16 %h0, %h2, 15;
+    cvt.u32.u16 %r20, %h0;
+    add.u64 %rd21, %rd3, %rd19;
+    ld.global.u16 %h3, [%rd21];
+    cvt.u64.u16 %rd24, %h3;
+    cvt.u64.u32 %rd25, %r8;
+    cvt.u64.u32 %rd26, %r20;
+    add.u64 %rd27, %rd24, %rd25;
+    add.u64 %rd28, %rd27, %rd26;
+    mul.wide.u32 %rd29, %r4, 8;
+    add.u64 %rd30, %rd5, %rd29;
+    st.global.u64 [%rd30], %rd28;
+
+    // Truncating narrow stores (strict U8/U16 values + lenient u32).
+    mul.lo.u32 %r21, %r5, 3;
+    add.u32 %r22, %r21, 1;
+    cvt.u8.u32 %b4, %r22;
+    add.u64 %rd31, %rd10, %rd13;
+    st.global.u8 [%rd31], %b4;
+    add.u64 %rd30, %rd11, %rd13;
+    st.global.u8 [%rd30], %r22;
+    mul.lo.u32 %r23, %r5, 1000;
+    add.u32 %r24, %r23, 1;
+    cvt.u16.u32 %h4, %r24;
+    shl.b64 %rd29, %rd13, 1;
+    add.u64 %rd28, %rd12, %rd29;
+    st.global.u16 [%rd28], %h4;
+
+    // f16 path: halves as bits in .b16 regs (numba idiom), shadowed
+    // in .f16 regs (NVRTC shape); both compute the same values.
+    add.u64 %rd27, %rd7, %rd29;
+    ld.global.b16 %bh1, [%rd27];
+    add.u64 %rd26, %rd8, %rd29;
+    ld.global.b16 %bh2, [%rd26];
+    add.f16 %bh3, %bh1, %bh2;
+    mul.f16 %bh4, %bh1, %bh2;
+    cvt.f32.f16 %f1, %bh3;
+    cvt.f32.f16 %f2, %bh4;
+    // F16-declared shadow (NVRTC shape) of the same computation:
+    // idempotent input roundtrips, so s2==s and p2==p bit-exactly
+    // and the folded differences are +0.0.
+    cvt.f32.f16 %f7, %bh1;
+    cvt.rn.f16.f32 %x1, %f7;
+    cvt.f32.f16 %f8, %bh2;
+    cvt.rn.f16.f32 %x2, %f8;
+    add.f16 %x3, %x1, %x2;
+    mul.f16 %x4, %x1, %x2;
+    cvt.f32.f16 %f5, %x3;
+    cvt.f32.f16 %f6, %x4;
+    sub.f32 %f7, %f5, %f1;
+    sub.f32 %f8, %f6, %f2;
+    add.f32 %f3, %f1, %f2;
+    add.f32 %f3, %f3, %f7;
+    add.f32 %f3, %f3, %f8;
+    setp.lt.f16 %p1, %bh1, %bh2;
+    selp.b16 %bh5, %bh3, %bh4, %p1;
+
+    // Rounding lanes (i<8): RNE immediates, neg, flush (all .b16).
+    mov.f32 %f4, 1.00048828125;
+    cvt.rn.f16.f32 %bh6, %f4;
+    mov.f32 %f4, 1.0006;
+    cvt.rn.f16.f32 %bh7, %f4;
+    mov.f32 %f4, 100000.0;
+    cvt.rn.f16.f32 %bh8, %f4;
+    mov.f32 %f4, -0.0;
+    cvt.rn.f16.f32 %bh9, %f4;
+    mov.f32 %f4, 0FFFC00000;
+    cvt.rn.f16.f32 %bh10, %f4;
+    mov.f32 %f4, 0F37000000;
+    cvt.rn.f16.f32 %bh11, %f4;
+    mov.f32 %f4, 2.5;
+    cvt.rn.f16.f32 %bh12, %f4;
+    neg.f16 %bh13, %bh12;
+    mov.f32 %f4, 0F00000001;
+    cvt.rn.f16.f32 %bh14, %f4;
+    setp.eq.u32 %p2, %r4, 0;
+    setp.eq.u32 %p3, %r4, 1;
+    setp.eq.u32 %p4, %r4, 2;
+    setp.eq.u32 %p5, %r4, 3;
+    setp.eq.u32 %p6, %r4, 4;
+    setp.eq.u32 %p7, %r4, 5;
+    setp.eq.u32 %p8, %r4, 6;
+    setp.eq.u32 %p9, %r4, 7;
+    selp.b16 %bh15, %bh6, %bh5, %p2;
+    selp.b16 %bh15, %bh7, %bh15, %p3;
+    selp.b16 %bh15, %bh8, %bh15, %p4;
+    selp.b16 %bh15, %bh9, %bh15, %p5;
+    selp.b16 %bh15, %bh10, %bh15, %p6;
+    selp.b16 %bh15, %bh11, %bh15, %p7;
+    selp.b16 %bh15, %bh13, %bh15, %p8;
+    selp.b16 %bh15, %bh14, %bh15, %p9;
+    cvt.f32.f16 %f7, %bh15;
+    selp.f32 %f8, %f7, %f3, %p2;
+    selp.f32 %f8, %f7, %f8, %p3;
+    selp.f32 %f8, %f7, %f8, %p4;
+    selp.f32 %f8, %f7, %f8, %p5;
+    selp.f32 %f8, %f7, %f8, %p6;
+    selp.f32 %f8, %f7, %f8, %p7;
+    selp.f32 %f8, %f7, %f8, %p8;
+    selp.f32 %f8, %f7, %f8, %p9;
+    add.u64 %rd25, %rd6, %rd22;
+    st.global.f32 [%rd25], %f8;
+    add.u64 %rd24, %rd9, %rd29;
+    st.global.u16 [%rd24], %bh15;
+
+    ret;
+}

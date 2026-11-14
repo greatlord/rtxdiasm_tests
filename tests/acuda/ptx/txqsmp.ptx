@@ -1,0 +1,16 @@
+.version 8.6
+.target sm_80, texmode_independent
+.address_size 64
+.visible .entry txqsmp(.param .samplerref smp, .param .u64 out)
+{
+    .reg .u32 w;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    txq.filter_mode.b32 w, [smp];
+    st.global.u32 [p], w;
+    txq.addr_mode_0.b32 w, [smp];
+    st.global.u32 [p+4], w;
+    txq.force_unnormalized_coords.b32 w, [smp];
+    st.global.u32 [p+8], w;
+    ret;
+}

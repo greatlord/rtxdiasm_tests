@@ -1,0 +1,26 @@
+.version 8.6
+.target sm_86
+.address_size 64
+.visible .entry fma_relu(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .b16 a16, b16, c16, d16;
+    .reg .b32 a2, b2, c2, d2;
+    ld.param.u64 base, [data];
+    ld.u16 a16, [base];
+    ld.u16 b16, [base+2];
+    ld.u16 c16, [base+4];
+    fma.rn.relu.f16 d16, a16, b16, c16;
+    st.u16 [base+8], d16;
+    ld.u32 a2, [base+12];
+    ld.u32 b2, [base+16];
+    ld.u32 c2, [base+20];
+    fma.rn.relu.f16x2 d2, a2, b2, c2;
+    st.u32 [base+24], d2;
+    ld.u32 a2, [base+28];
+    ld.u32 b2, [base+32];
+    ld.u32 c2, [base+36];
+    fma.rn.relu.bf16x2 d2, a2, b2, c2;
+    st.u32 [base+40], d2;
+    ret;
+}

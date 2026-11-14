@@ -1,0 +1,19 @@
+// Global f32 atomic add through a BDA pointer (compile-only on devices
+// without shaderBufferFloat32AtomicAdd).
+.version 8.5
+.target sm_80
+.address_size 64
+.visible .entry atom_bda_f32(.param .u64 p, .param .u32 tag)
+{
+    .reg .u64 %rd<3>;
+    .reg .u32 %r<2>;
+    .reg .f32 %f<3>;
+    ld.param.u64 %rd1, [p];
+    ld.param.u32 %r1, [tag];
+    mov.f32 %f1, 0f3F800000;
+    atom.global.add.f32 %f2, [%rd1], %f1;
+    red.global.add.f32 [%rd1+4], %f1;
+    st.global.f32 [%rd1+8], %f2;
+    st.global.u32 [%rd1+16], %r1;
+    ret;
+}

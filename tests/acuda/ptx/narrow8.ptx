@@ -1,0 +1,49 @@
+// ACUDA-EXTENSION: ptxas rejects this PTX form (see supported-isa.md).
+// 8-bit integer arithmetic. ptxas rejects .u8/.s8 arithmetic on every
+// tested PTX ISA, so this is an ACuda widening extension: operands are
+// canonical zero-extended bytes, the op runs in 32 bits, and the result
+// is truncated back to 8 bits (signed compares/shifts sign-extend
+// first).
+.version 8.0
+.target sm_80
+.address_size 64
+.visible .entry narrow8(.param .u64 p)
+{
+    .reg .u64 %rd1;
+    .reg .u8 %a, %b, %c;
+    .reg .s8 %x, %y, %z;
+    ld.param.u64 %rd1, [p];
+    ld.global.u8 %a, [%rd1];
+    ld.global.u8 %b, [%rd1+1];
+    ld.global.s8 %x, [%rd1];
+    ld.global.s8 %y, [%rd1+1];
+
+    add.u8 %c, %a, %b;
+    st.global.u8 [%rd1+8], %c;
+    sub.u8 %c, %b, %a;
+    st.global.u8 [%rd1+9], %c;
+    mul.lo.u8 %c, %a, %b;
+    st.global.u8 [%rd1+10], %c;
+    min.u8 %c, %a, %b;
+    st.global.u8 [%rd1+11], %c;
+    max.u8 %c, %a, %b;
+    st.global.u8 [%rd1+12], %c;
+    shl.b8 %c, %a, 2;
+    st.global.u8 [%rd1+13], %c;
+    shr.u8 %c, %a, 1;
+    st.global.u8 [%rd1+14], %c;
+
+    sub.s8 %z, %x, %y;
+    st.global.u8 [%rd1+15], %z;
+    min.s8 %z, %x, %y;
+    st.global.u8 [%rd1+16], %z;
+    max.s8 %z, %x, %y;
+    st.global.u8 [%rd1+17], %z;
+    shr.s8 %z, %x, 1;
+    st.global.u8 [%rd1+18], %z;
+    add.s8 %z, %x, %y;
+    st.global.u8 [%rd1+19], %z;
+    mul.lo.s8 %z, %x, %y;
+    st.global.u8 [%rd1+20], %z;
+    ret;
+}

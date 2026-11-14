@@ -1,0 +1,15 @@
+.target sm_50
+.section .text.k,"ax",@progbits
+.global k
+k:
+    MOV R0, c[0x0][0x140];
+    MOV32I R1, 0x148;
+    ISETP.LT.U32.AND P0, PT, R0, 0x3, PT;
+    @!P0 MOV32I R0, 0x0;
+    SHL R0, R0, 0x3;
+    IADD R0, R0, R1;
+    LDC.64 R2, c[0x0][R0];
+    LDG.E R5, [R2];
+    MOV R4, c[0x0][0x160];
+    STG.E [R4], R5;
+    EXIT;

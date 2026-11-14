@@ -1,0 +1,22 @@
+// Module-scope .texref bound through the legacy CUDA 4.x API.
+// Every lane fetches element 0 from a 1D linear texture and writes it
+// to its own output slot.
+.version 8.0
+.target sm_80
+.address_size 64
+
+.texref .f32 tex1;
+
+.visible .entry texfetch(.param .u64 p)
+{
+    .reg .u64 %rd, %off;
+    .reg .u32 %lane;
+    .reg .f32 %x, %v0, %v1, %v2, %v3;
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.f32 %x, 0f00000000;
+    tex.1d.v4.f32.f32 {%v0,%v1,%v2,%v3}, [tex1, {%x}];
+    mad.wide.u32 %off, %lane, 4, %rd;
+    st.global.f32 [%off], %v0;
+    ret;
+}

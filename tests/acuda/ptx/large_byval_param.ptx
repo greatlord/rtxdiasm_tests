@@ -1,0 +1,21 @@
+.version 7.0
+.target sm_80
+.address_size 64
+
+// 536-byte by-value parameter. This exceeds the usual 256-byte Vulkan
+// push-constant limit, so ACuda must pass it through a storage buffer.
+.visible .entry large_byval_param(
+    .param .u64x67 input,
+    .param .u64 output
+)
+{
+    .reg .b64 %rd<2>;
+    .reg .b32 %r<4>;
+
+    ld.param.u64 %rd0, [output];
+    ld.param.u32 %r0, [input+0];
+    ld.param.u32 %r1, [input+0x210];
+    add.u32 %r0, %r0, %r1;
+    st.global.u32 [%rd0], %r0;
+    ret;
+}

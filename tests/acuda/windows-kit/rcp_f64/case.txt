@@ -1,0 +1,4 @@
+entry=rcp_f64
+input=0000000000001040
+expected=000000000000d03f
+block=1

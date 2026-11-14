@@ -1,0 +1,32 @@
+// not.pred + membar.{cta,gl,sys}, verified on-GPU. Reads two u64s,
+// writes 1 when the first is NOT less than the second (the predicate is
+// inverted before the predicated movs), 2 otherwise. The three fences
+// sit between the load and the store and must not disturb the data.
+.version 8.6
+.target sm_70
+.address_size 64
+
+.visible .entry pred_membar(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64           in_addr, out_addr;
+    .reg .u64           a, b, res;
+    .reg .pred          pred;
+
+    ld.param.u64        in_addr, [input];
+    ld.param.u64        out_addr, [output];
+
+    ld.u64              a, [in_addr];
+    ld.u64              b, [in_addr + 8];
+    setp.lt.u64         pred, a, b;
+    not.pred            pred, pred;
+    membar.cta;
+    @pred mov.u64       res, 1;
+    @!pred mov.u64      res, 2;
+    membar.gl;
+    membar.sys;
+    st.u64              [out_addr], res;
+    ret;
+}

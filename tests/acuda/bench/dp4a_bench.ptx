@@ -1,0 +1,96 @@
+// dp4a throughput kernel for tests/bench/bench_dp4a.c.
+// Computes `reps` iterations of 32 dp4a (4 independent accumulator
+// chains) per thread. `reps` is a push-constant scalar and must be >= 1.
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .entry dp4a_bench(.param .u64 p, .param .u32 reps)
+{
+    .reg .u64 r;
+    .reg .u32 a0, a1, a2, a3, b0, b1, b2, b3;
+    .reg .u32 c0, c1, c2, c3, t, n, tid;
+    .reg .pred p0, p1;
+    ld.param.u64 r, [p];
+    ld.param.u32 n, [reps];
+    ld.global.v4.u32 {a0, a1, a2, a3}, [r];
+    ld.global.v4.u32 {b0, b1, b2, b3}, [r+16];
+    mov.u32 c0, 0;
+    mov.u32 c1, 1;
+    mov.u32 c2, 2;
+    mov.u32 c3, 3;
+L:
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    dp4a.u32.u32 c0, a0, b0, c0;
+    dp4a.u32.u32 c1, a1, b1, c1;
+    dp4a.u32.u32 c2, a2, b2, c2;
+    dp4a.u32.u32 c3, a3, b3, c3;
+    add.u32 b0, b0, c0;
+    add.u32 b1, b1, c1;
+    add.u32 b2, b2, c2;
+    add.u32 b3, b3, c3;
+    sub.u32 n, n, 1;
+    setp.ne.u32 p1, n, 0;
+    @p1 bra L;
+    add.u32 t, c0, c1;
+    add.u32 t, t, c2;
+    add.u32 t, t, c3;
+    mov.u32 tid, %tid.x;
+    setp.eq.u32 p0, tid, 0;
+    @p0 st.global.u32 [r+32], t;
+    ret;
+}

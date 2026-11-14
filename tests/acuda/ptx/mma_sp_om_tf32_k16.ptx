@@ -1,0 +1,52 @@
+// Sparse mma m16n8k16 tf32, 1:2 structured A.
+// A 0..511, metadata 512..639, B 640..1151, C 1152..1663,
+// D 1664..2175 (bytes).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_sp_om_tf32_k16(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<4>, %b<4>;
+    .reg .f32 %c<4>, %d<4>;
+    .reg .b32 %e;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+    ld.global.b32 %a2, [%pa+8];
+    ld.global.b32 %a3, [%pa+12];
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %e, [%pa+512];
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %b0, [%pa+640];
+    ld.global.b32 %b1, [%pa+644];
+    ld.global.b32 %b2, [%pa+648];
+    ld.global.b32 %b3, [%pa+652];
+    ld.global.f32 %c0, [%pa+1152];
+    ld.global.f32 %c1, [%pa+1156];
+    ld.global.f32 %c2, [%pa+1160];
+    ld.global.f32 %c3, [%pa+1164];
+
+    mma.sp::ordered_metadata.sync.aligned.m16n8k16.row.col.f32.tf32.tf32.f32
+        {%d0,%d1,%d2,%d3}, {%a0,%a1,%a2,%a3},
+        {%b0,%b1,%b2,%b3}, {%c0,%c1,%c2,%c3}, %e, 0;
+
+    st.global.f32 [%pa+1664], %d0;
+    st.global.f32 [%pa+1668], %d1;
+    st.global.f32 [%pa+1672], %d2;
+    st.global.f32 [%pa+1676], %d3;
+    ret;
+}

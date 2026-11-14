@@ -1,0 +1,21 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry texams4(.param .texref tex, .param .u64 out)
+{
+    .reg .s32 x, y;
+    .reg .f32 r0, r1, r2, r3;
+    .reg .u32 sample, idx;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.u32 sample, 1;
+    mov.u32 idx, 1;
+    mov.s32 x, 1;
+    mov.s32 y, 1;
+    tex.a2dms.v4.f32.s32 {r0, r1, r2, r3}, [tex, {sample, idx, x, y}];
+    st.global.f32 [p], r0;
+    st.global.f32 [p+4], r1;
+    st.global.f32 [p+8], r2;
+    st.global.f32 [p+12], r3;
+    ret;
+}

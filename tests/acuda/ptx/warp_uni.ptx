@@ -1,0 +1,36 @@
+// vote.sync.uni over three predicates: all true, all false, mixed.
+// Block size 32: one warp.
+.version 8.0
+.target sm_80
+.address_size 64
+.visible .entry warp_uni(.param .u64 p)
+{
+    .reg .u64 %rd<3>;
+    .reg .u32 %r<6>;
+    .reg .pred %q<5>;
+    ld.param.u64 %rd1, [p];
+    mov.u32 %r1, %tid.x;
+    mul.lo.u32 %r2, %r1, 20;
+    cvt.u64.u32 %rd2, %r2;
+    add.u64 %rd2, %rd1, %rd2;
+
+    setp.ge.u32 %q1, %r1, 0;   // true for every lane
+    setp.lt.u32 %q2, %r1, 0;   // false for every lane
+    setp.lt.u32 %q3, %r1, 16;  // mixed
+    vote.sync.uni.pred %q4, %q1, 0xffffffff;
+    selp.u32 %r3, 1, 0, %q4;
+    vote.sync.uni.pred %q4, %q2, 0xffffffff;
+    selp.u32 %r4, 1, 0, %q4;
+    vote.sync.uni.pred %q4, %q3, 0xffffffff;
+    selp.u32 %r5, 1, 0, %q4;
+    st.global.u32 [%rd2], %r3;
+    st.global.u32 [%rd2+4], %r4;
+    st.global.u32 [%rd2+8], %r5;
+    vote.sync.all.pred %q4, %q3, 0xffffffff;
+    selp.u32 %r3, 1, 0, %q4;
+    vote.sync.any.pred %q4, %q3, 0xffffffff;
+    selp.u32 %r4, 1, 0, %q4;
+    st.global.u32 [%rd2+12], %r3;
+    st.global.u32 [%rd2+16], %r4;
+    ret;
+}

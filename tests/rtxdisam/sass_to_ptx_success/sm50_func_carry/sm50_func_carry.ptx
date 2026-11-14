@@ -1,0 +1,39 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.func (.param .u64 output) f(.param .u32 a0, .param .u32 a1, .param .u32 b0, .param .u32 b1)
+{
+    .reg .u32 r0, r1, r2, r3;
+    .reg .u64 a, b, r;
+    ld.param.u32 r0, [a0];
+    ld.param.u32 r1, [a1];
+    ld.param.u32 r2, [b0];
+    ld.param.u32 r3, [b1];
+    mov.b64 a, {r0, r1};
+    mov.b64 b, {r2, r3};
+    add.u64 r, a, b;
+    st.param.u64 [output], r;
+    ret;
+}
+
+.visible .entry k(.param .u32 a0, .param .u32 a1, .param .u32 b0, .param .u32 b1, .param .u64 out)
+{
+    .reg .u64 p, op;
+    .reg .u32 x0, x1, y0, y1;
+    .param .u32 pa0, pa1, pb0, pb1;
+    .param .u64 retval;
+    ld.param.u32 x0, [a0];
+    ld.param.u32 x1, [a1];
+    ld.param.u32 y0, [b0];
+    ld.param.u32 y1, [b1];
+    st.param.u32 [pa0], x0;
+    st.param.u32 [pa1], x1;
+    st.param.u32 [pb0], y0;
+    st.param.u32 [pb1], y1;
+    call (retval), f, (pa0, pa1, pb0, pb1);
+    ld.param.u64 p, [retval];
+    ld.param.u64 op, [out];
+    st.global.u64 [op], p;
+    ret;
+}

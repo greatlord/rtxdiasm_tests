@@ -1,0 +1,36 @@
+// Warp-level WMMA m16n16k8 tf32 x tf32 -> f32, ACuda-private layout.
+// Buffer words: A 0..127 (16x8 row-major), B 128..255 (8x16 column-
+// major), C 256..511 (16x16 row-major), D 512..767.
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_tf32(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .u32 %sa, %sb, %sc;
+    .reg .b32 %a<4>, %b<4>;
+    .reg .f32 %c<8>, %d<8>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %sa, 8;
+    mov.u32 %sb, 8;
+    mov.u32 %sc, 16;
+
+    wmma.load.a.sync.aligned.m16n16k8.global.row.tf32
+        {%a0,%a1,%a2,%a3}, [%rd], %sa;
+    wmma.load.b.sync.aligned.m16n16k8.global.col.tf32
+        {%b0,%b1,%b2,%b3}, [%rd+512], %sb;
+    wmma.load.c.sync.aligned.m16n16k8.global.row.f32
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7}, [%rd+1024], %sc;
+
+    wmma.mma.sync.aligned.row.col.m16n16k8.f32.tf32.tf32.f32
+        {%d0,%d1,%d2,%d3,%d4,%d5,%d6,%d7},
+        {%a0,%a1,%a2,%a3}, {%b0,%b1,%b2,%b3},
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7};
+
+    wmma.store.d.sync.aligned.m16n16k8.global.row.f32
+        [%rd+2048], {%d0,%d1,%d2,%d3,%d4,%d5,%d6,%d7}, %sc;
+    ret;
+}

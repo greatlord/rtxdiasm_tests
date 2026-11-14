@@ -1,0 +1,56 @@
+//
+// Stage 6 loops slice: single-block while loop with register-carried
+// induction + accumulator (phis). Must assemble with real ptxas AND
+// compile+launch correctly here. sm_80, exact grid, N=8 trip count.
+//
+.version 8.8
+.target sm_80
+.address_size 64
+
+.visible .entry loopdot(
+    .param .u64 a,
+    .param .u64 b,
+    .param .u64 c,
+    .param .u32 n
+)
+{
+    .reg .u32 %r<16>;
+    .reg .u64 %rd<16>;
+    .reg .u64 %ra, %rb, %rc;
+    .reg .f32 %f<8>;
+    .reg .pred %p<2>;
+
+    ld.param.u64 %ra, [a];
+    ld.param.u64 %rb, [b];
+    ld.param.u64 %rc, [c];
+    ld.param.u32 %r11, [n];
+    mov.u32 %r1, %tid.x;
+    mov.u32 %r2, %ctaid.x;
+    mov.u32 %r3, %ntid.x;
+    mov.u32 %r4, 8;
+    mov.u32 %r5, 4;
+    mov.u32 %r6, 1;
+    mad.lo.u32 %r7, %r2, %r3, %r1;
+    mov.u32 %r8, 0;
+    mov.f32 %f1, 0F00000000;
+
+HEAD:
+    mul.lo.u32 %r9, %r7, %r4;
+    add.u32 %r10, %r9, %r8;
+    mul.wide.u32 %rd1, %r10, %r5;
+    add.u64 %rd2, %ra, %rd1;
+    add.u64 %rd3, %rb, %rd1;
+    ld.global.f32 %f2, [%rd2];
+    ld.global.f32 %f3, [%rd3];
+    mul.f32 %f4, %f2, %f3;
+    add.f32 %f1, %f1, %f4;
+    add.u32 %r8, %r8, %r6;
+    setp.lt.u32 %p1, %r8, %r11;
+    @%p1 bra HEAD;
+
+NEXT:
+    mul.wide.u32 %rd4, %r7, %r5;
+    add.u64 %rd5, %rc, %rd4;
+    st.global.f32 [%rd5], %f1;
+    ret;
+}

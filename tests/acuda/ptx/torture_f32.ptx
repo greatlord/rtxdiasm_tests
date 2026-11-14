@@ -1,0 +1,98 @@
+//
+// Stage 6 subset torture test: every supported op in one sm_80 kernel.
+// Must assemble with real ptxas AND compile+launch correctly here.
+// f32 data path + f64 gate + u64 side channels. N = 4096, exact grid.
+//
+.version 8.8
+.target sm_80
+.address_size 64
+
+.visible .entry torture_f32(
+    .param .u64 a,
+    .param .u64 b,
+    .param .u64 c,
+    .param .u64 d,
+    .param .u64 e,
+    .param .u64 f
+)
+{
+    .reg .u32 %r<8>;
+    .reg .u64 %rd<32>;
+    .reg .u64 %ra, %rb, %rc, %rdd, %re, %rf;
+    .reg .u64 %k8, %k4, %k2, %k3, %mk, %i64, %sgn, %a1, %i3, %m4, %m4b, %m8, %w4, %t4, %du, %do, %pa, %pb, %pc, %pd, %pe, %pet, %pf, %du2, %zd64;
+    .reg .f32 %f<16>;
+    .reg .f32 %fa, %fb, %fhalf, %ftwo, %fone, %fz;
+    .reg .f64 %fd<4>;
+    .reg .f64 %fz64;
+    .reg .pred %p<2>;
+
+    ld.param.u64 %ra, [a];
+    ld.param.u64 %rb, [b];
+    ld.param.u64 %rc, [c];
+    ld.param.u64 %rdd, [d];
+    ld.param.u64 %re, [e];
+    ld.param.u64 %rf, [f];
+
+    mov.u32 %r1, %tid.x;
+    mov.u32 %r2, %ctaid.x;
+    mov.u32 %r3, %ntid.x;
+    mov.u32 %r4, 4;
+    mov.u64 %k8, 8;
+    mov.u64 %k4, 4;
+    mov.u64 %k2, 2;
+    mov.u64 %k3, 3;
+    mov.u64 %mk, 0;
+    mov.f32 %fhalf, 0.5;
+    mov.f32 %ftwo, 0F40000000;
+    mov.f32 %fone, 1.0;
+    mov.f32 %fz, 0.0;
+    mov.f64 %fz64, 0.0;
+
+    // u32 + s64 index math (numba shape, mask 0).
+    mad.lo.u32 %r5, %r2, %r3, %r1;
+    cvt.s64.s32 %i64, %r5;
+    shr.s64 %sgn, %i64, 63;
+    and.b64 %a1, %sgn, %mk;
+    add.s64 %i3, %a1, %i64;
+    mul.lo.s64 %m4, %i3, %k4;
+    mul.lo.s64 %m8, %i3, %k8;
+    mul.wide.u32 %w4, %r5, %r4;
+    cvt.u64.u32 %t4, %r5;
+    shl.b64 %m4b, %t4, 2;
+    cvt.u64.u32 %du, %r5;
+    shl.b64 %do, %du, 3;
+
+    // Byte addresses, three different-but-equal computations.
+    add.u64 %pa, %ra, %m4;
+    add.u64 %pb, %rb, %w4;
+    add.u64 %pc, %rc, %m4b;
+    add.u64 %pd, %rdd, %do;
+    add.u64 %pf, %rf, %m8;
+
+    ld.global.f32 %fa, [%pa];
+    ld.global.f32 %fb, [%pb];
+    ld.global.f64 %fd0, [%pf];
+
+    // f64 gate (skips i == 0; c/d/e are zeroed up front).
+    setp.gt.f64 %p1, %fd0, %fz64;
+    @!%p1 bra DONE;
+
+    mul.f32 %f1, %fa, %ftwo;
+    add.f32 %f2, %f1, %fb;
+    fma.rn.f32 %f3, %fa, %fhalf, %f2;
+    sub.f32 %f4, %f3, %fb;
+    st.global.f32 [%pc], %f4;
+
+    // u64 + u32 side channels with on-device roundtrip check.
+    st.global.u64 [%pd], %du;
+    ld.global.u64 %du2, [%pd];
+    cvt.u32.u64 %r6, %du2;
+    sub.u32 %r7, %r5, %r6;
+    cvt.u64.u32 %zd64, %r7;
+    add.u64 %pet, %re, %m4;
+    add.u64 %pe, %pet, %zd64;
+    st.global.u32 [%pe], %r6;
+
+DONE:
+    ret;
+}

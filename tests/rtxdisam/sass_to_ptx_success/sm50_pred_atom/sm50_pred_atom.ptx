@@ -1,0 +1,26 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64 in_addr;
+    .reg .u64 out_addr;
+    .reg .u32 value;
+    .reg .u32 old;
+    .reg .u32 tid;
+    .reg .pred first;
+
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+
+    ld.global.u32 value, [in_addr];
+    mov.u32 tid, %tid.x;
+    setp.eq.u32 first, tid, 0;
+    @first atom.global.max.u32 old, [out_addr], value;
+    @first st.global.u32 [out_addr+4], old;
+    ret;
+}

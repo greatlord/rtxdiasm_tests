@@ -1,0 +1,22 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry ldst_cache(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .u32 r0, r1, r2, r3, r4, r5;
+    ld.param.u64 base, [data];
+    ld.global.ca.u32 r0, [base];
+    st.global.wb.u32 [base+16], r0;
+    ld.global.cg.u32 r1, [base+4];
+    st.global.cg.u32 [base+20], r1;
+    ld.global.cs.u32 r2, [base+8];
+    st.global.cs.u32 [base+24], r2;
+    ld.global.lu.u32 r3, [base+12];
+    st.global.wt.u32 [base+28], r3;
+    ld.ca.u32 r4, [base+16];
+    st.wb.u32 [base+32], r4;
+    ld.cv.u32 r5, [base+20];
+    st.cs.u32 [base+36], r5;
+    ret;
+}

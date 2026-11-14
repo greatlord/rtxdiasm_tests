@@ -1,0 +1,39 @@
+// Dense warp matmul mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16.
+// Buffer layout (words): A 0..63 (2/lane), B 64..95 (1/lane),
+// C 96..159 (2/lane), D 160..223 (2/lane).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_k8_f16acc(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<2>, %b, %c<2>, %d<2>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %b, [%pa+256];
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %c0, [%pa+384];
+    ld.global.b32 %c1, [%pa+388];
+
+    mma.sync.aligned.m16n8k8.row.col.f16.f16.f16.f16
+        {%d0,%d1}, {%a0,%a1}, {%b}, {%c0,%c1};
+
+    st.global.b32 [%pa+640], %d0;
+    st.global.b32 [%pa+644], %d1;
+    ret;
+}

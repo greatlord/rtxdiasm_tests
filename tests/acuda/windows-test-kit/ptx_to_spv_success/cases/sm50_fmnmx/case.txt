@@ -1,0 +1,3 @@
+entry=k
+args=--run-buffer-hex 8:000000400000803f --run-buffer-hex 8:0000000000000000
+expected_regex=0x3f800000[\s\S]*0x40000000

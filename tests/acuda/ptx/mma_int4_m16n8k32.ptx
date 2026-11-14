@@ -1,0 +1,44 @@
+// Dense mma m16n8k32 u4 x u4 -> s32.
+// A 0..255, B 256..383, C 384..895, D 896..1407 (bytes).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_int4_m16n8k32(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<2>, %b;
+    .reg .s32 %c<4>, %d<4>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %b, [%pa+256];
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.s32 %c0, [%pa+384];
+    ld.global.s32 %c1, [%pa+388];
+    ld.global.s32 %c2, [%pa+392];
+    ld.global.s32 %c3, [%pa+396];
+
+    mma.sync.aligned.m16n8k32.row.col.s32.u4.u4.s32
+        {%d0,%d1,%d2,%d3}, {%a0,%a1}, {%b},
+        {%c0,%c1,%c2,%c3};
+
+    st.global.s32 [%pa+896], %d0;
+    st.global.s32 [%pa+900], %d1;
+    st.global.s32 [%pa+904], %d2;
+    st.global.s32 [%pa+908], %d3;
+    ret;
+}

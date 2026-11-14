@@ -1,0 +1,48 @@
+// isspacep queries for tracked shared/global/local/param addresses.
+.version 8.0
+.target sm_86
+.address_size 64
+
+.shared .u32 svar[1];
+.const .u32 cvar[2] = { 11, 22 };
+
+.visible .entry isspacep_test(.param .u64 p)
+{
+    .local .u32 lvar[1];
+    .reg .u64 %rd, %sp, %lp, %gp, %cp;
+    .reg .pred %a, %b, %c, %d, %e, %f, %g, %h;
+    .reg .u32 %r;
+
+    ld.param.u64 %rd, [p];
+    mov.u64 %sp, svar;
+    mov.u64 %lp, lvar;
+    mov.u64 %gp, %rd;
+    mov.u64 %cp, cvar;
+
+    isspacep.shared %a, %sp;
+    isspacep.global %b, %gp;
+    isspacep.local %c, %lp;
+    isspacep.local %d, %sp;
+    isspacep.param %e, %rd;
+    isspacep.const %f, %cp;
+    isspacep.global %g, %cp;
+    isspacep.const %h, %gp;
+
+    selp.u32 %r, 1, 0, %a;
+    st.global.u32 [%rd], %r;
+    selp.u32 %r, 1, 0, %b;
+    st.global.u32 [%rd+4], %r;
+    selp.u32 %r, 1, 0, %c;
+    st.global.u32 [%rd+8], %r;
+    selp.u32 %r, 1, 0, %d;
+    st.global.u32 [%rd+12], %r;
+    selp.u32 %r, 1, 0, %e;
+    st.global.u32 [%rd+16], %r;
+    selp.u32 %r, 1, 0, %f;
+    st.global.u32 [%rd+20], %r;
+    selp.u32 %r, 1, 0, %g;
+    st.global.u32 [%rd+24], %r;
+    selp.u32 %r, 1, 0, %h;
+    st.global.u32 [%rd+28], %r;
+    ret;
+}

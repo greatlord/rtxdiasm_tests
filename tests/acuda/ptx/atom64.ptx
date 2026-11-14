@@ -1,0 +1,15 @@
+.version 8.0
+.target sm_80
+.address_size 64
+.visible .entry atom64(.param .u64 p)
+{
+ .reg .u64 a, o, mem;
+ ld.param.u64 a, [p];
+ atom.add.u64 o, [a], 0x100;
+ st.global.u64 [a+8], o;
+ atom.cas.b64 o, [a], 0x10f, 0x77;
+ st.global.u64 [a+16], o;
+ ld.global.u64 mem, [a];
+ st.global.u64 [a+24], mem;
+ ret;
+}

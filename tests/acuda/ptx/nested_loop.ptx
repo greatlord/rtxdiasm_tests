@@ -1,0 +1,36 @@
+// Nested structured loop: outer 2 iterations, inner 3, accumulator.
+// Buffer: acc (word 0), outer counter (word 1).
+
+.version 8.5
+.target sm_80
+.address_size 64
+
+.visible .entry nested_loop(.param .u64 p)
+{
+    .reg .u64 %r;
+    .reg .u32 %o, %i, %a;
+    .reg .pred %p0, %p1;
+
+    ld.param.u64 %r, [p];
+    mov.u32 %o, 0;
+    mov.u32 %a, 0;
+TEST:
+    setp.ge.u32 %p0, %o, 2;
+    @%p0 bra DONE;
+PREP:
+    mov.u32 %i, 0;
+TESTK:
+    setp.ge.u32 %p1, %i, 3;
+    @%p1 bra STORE;
+BODY:
+    add.u32 %a, %a, 1;
+    add.u32 %i, %i, 1;
+    bra.uni TESTK;
+STORE:
+    add.u32 %o, %o, 1;
+    bra.uni TEST;
+DONE:
+    st.global.u32 [%r], %a;
+    st.global.u32 [%r+4], %o;
+    ret;
+}

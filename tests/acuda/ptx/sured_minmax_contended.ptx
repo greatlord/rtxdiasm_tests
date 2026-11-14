@@ -1,0 +1,24 @@
+// Many simultaneous writers target the same two R32f surface texels.  The
+// host checks that min/max are exact after the contended dispatch.
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry sured_minmax_contended(.param .surfref surf)
+{
+    .reg .u32 %r<5>;
+    .reg .f32 %f<2>;
+    mov.u32 %r1, %ctaid.x;
+    mov.u32 %r2, %tid.x;
+    mov.u32 %r3, %ntid.x;
+    mad.lo.u32 %r4, %r1, %r3, %r2;
+    add.s32 %r4, %r4, -8192;
+    cvt.rn.f32.s32 %f1, %r4;
+
+    mov.u32 %r1, 0;
+    mov.u32 %r2, 0;
+    sured.p.min.2d.f32.trap [surf, {%r1, %r2}], %f1;
+
+    mov.u32 %r1, 1;
+    sured.p.max.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    ret;
+}

@@ -1,0 +1,45 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.shared .u32 sv[32];
+.visible .entry bar_forms(.param .u64 io)
+{
+    .reg .u64 rd, sp, base, off64;
+    .reg .u32 t, u;
+    .reg .pred p, q, r;
+    .reg .u32 d1, d2, d3, qv, rv;
+    ld.param.u64 rd, [io];
+    mov.u32 t, %tid.x;
+    mov.u64 sp, sv;
+    mul.wide.u32 off64, t, 4;
+    add.u64 sp, sp, off64;
+    st.shared.u32 [sp], t;
+    barrier.cta.sync 0;
+    barrier.sync.aligned 1;
+    bar.cta.sync 2;
+    bar.sync 3;
+    barrier.cta.arrive 4, 32;
+    add.u32 u, t, 1;
+    and.b32 u, u, 31;
+    mul.wide.u32 off64, u, 4;
+    mov.u64 sp, sv;
+    add.u64 sp, sp, off64;
+    ld.shared.u32 u, [sp];
+    setp.lt.u32 p, t, 10;
+    barrier.cta.red.popc.u32 d1, 6, p;
+    barrier.cta.red.or.pred q, 7, p;
+    barrier.cta.red.and.pred r, 8, p;
+    barrier.cta.red.popc.aligned.u32 d2, 9, !p;
+    barrier.cta.red.popc.u32 d3, 10, 32, p;
+    selp.u32 qv, 1, 0, q;
+    selp.u32 rv, 1, 0, r;
+    mul.wide.u32 off64, t, 24;
+    add.u64 base, rd, off64;
+    st.global.u32 [base], u;
+    st.global.u32 [base+4], d1;
+    st.global.u32 [base+8], qv;
+    st.global.u32 [base+12], rv;
+    st.global.u32 [base+16], d2;
+    st.global.u32 [base+20], d3;
+    ret;
+}

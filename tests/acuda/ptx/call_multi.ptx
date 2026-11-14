@@ -1,0 +1,37 @@
+.version 7.0
+.target sm_80
+.address_size 64
+
+.func (.param .u32 func_retval0) pick(.param .u32 a, .param .u32 b)
+{
+    .reg .u32 va, vb, r;
+    .reg .pred p;
+    ld.param.u32 va, [a];
+    ld.param.u32 vb, [b];
+    setp.gt.u32 p, va, vb;
+    @p bra THEN;
+    mov.u32 r, vb;
+    bra DONE;
+THEN:
+    mov.u32 r, va;
+DONE:
+    st.param.u32 [func_retval0], r;
+    ret;
+}
+
+.visible .entry call_multi(.param .u64 p)
+{
+    .reg .u64 rd;
+    .reg .u32 x, y, z;
+    .param .u32 pa, pb, pr;
+
+    ld.param.u64 rd, [p];
+    ld.global.u32 x, [rd];
+    ld.global.u32 y, [rd+4];
+    st.param.u32 [pa], x;
+    st.param.u32 [pb], y;
+    call (pr), pick, (pa, pb);
+    ld.param.u32 z, [pr];
+    st.global.u32 [rd], z;
+    ret;
+}

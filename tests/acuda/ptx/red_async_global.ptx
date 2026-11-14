@@ -1,0 +1,19 @@
+.version 8.8
+.target sm_120
+.address_size 64
+.visible .entry red_async_global(.param .u64 p)
+{
+    .reg .u64 a, v64, vs64;
+    .reg .u32 one, vs32;
+    ld.param.u64 a, [p];
+    mov.u32 one, 1;
+    red.async.release.gpu.global.add.u32 [a], one;
+    mov.u64 v64, 3;
+    red.async.release.gpu.global.add.u64 [a+16], v64;
+    mov.s64 vs64, 5;
+    red.async.release.gpu.global.add.s64 [a+24], vs64;
+    mov.s32 vs32, -1;
+    red.async.release.gpu.global.add.s32 [a+32], vs32;
+    red.async.mmio.release.sys.global.add.u32 [a+40], one;
+    ret;
+}

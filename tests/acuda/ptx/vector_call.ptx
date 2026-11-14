@@ -1,0 +1,47 @@
+// Vector call ABI: a .func that takes and returns .reg.v2 .u32,
+// invoked in place (call (v), f, (v)). impl() adds the two components
+// and returns a vector whose halves are both the sum; the entry then
+// stores the two halves. The .v64 accumulate is a deliberate
+// cross-check on the result being written back through the same
+// components the result register aliases.
+
+.version 6.5
+.target sm_60
+.address_size 64
+
+.func (.reg .v2 .u32 output) impl(
+    .reg .v2 .u32 input
+)
+{
+    .reg .v2 .u32   temp_v;
+    .reg .u32       temp1;
+    .reg .u32       temp2;
+
+    mov.u32       temp1, input.x;
+    mov.u32       temp2, input.y;
+    add.u32       temp2, temp1, temp2;
+    mov.u32       temp_v.x, temp2;
+    mov.u32       temp_v.y, temp2;
+    mov.v2.u32    output, temp_v;
+    ret;
+}
+
+.visible .entry vector_call(
+    .param .u64 input_p,
+    .param .u64 output_p
+)
+{
+    .reg .u64       in_addr;
+    .reg .u64       out_addr;
+    .reg .v2 .u32   temp;
+    .reg .u32       temp1;
+    .reg .u32       temp2;
+
+    ld.param.u64    in_addr, [input_p];
+    ld.param.u64    out_addr, [output_p];
+
+    ld.v2.u32     temp, [in_addr];
+    call (temp),  impl, (temp);
+    st.v2.u32     [out_addr], temp;
+    ret;
+}

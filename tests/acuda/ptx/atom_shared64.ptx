@@ -1,0 +1,23 @@
+.version 8.6
+.target sm_90
+.address_size 64
+.shared .align 8 .u64 ctr;
+.visible .entry atom_shared64(.param .u64 io)
+{
+    .reg .u64 rd, sp, off, v, old;
+    .reg .u32 t;
+    .reg .pred p;
+    ld.param.u64 rd, [io];
+    mov.u32 t, %tid.x;
+    mov.u64 v, 0;
+    st.shared.u64 [ctr], v;
+    bar.sync 0;
+    mov.u64 v, 1;
+    atom.shared.add.u64 old, [ctr], v;
+    bar.sync 0;
+    ld.shared.u64 v, [ctr];
+    mul.wide.u32 off, t, 8;
+    add.u64 sp, rd, off;
+    st.global.u64 [sp], v;
+    ret;
+}

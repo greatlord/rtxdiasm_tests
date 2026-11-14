@@ -1,0 +1,4 @@
+entry=vshr_clamp
+input=785634120400000011111111
+expected=7856341211111111
+block=1

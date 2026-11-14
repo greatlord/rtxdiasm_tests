@@ -1,0 +1,18 @@
+.version 8.6
+.target sm_100
+.address_size 64
+.visible .entry f32x2op(.param .u64 data)
+{
+    .reg .b64 base, a, b, c, d;
+    ld.param.u64 base, [data];
+    ld.u64 a, [base];
+    ld.u64 b, [base+8];
+    ld.u64 c, [base+16];
+    add.rn.f32x2 d, a, b;
+    st.u64 [base+24], d;
+    mul.rn.f32x2 d, a, b;
+    st.u64 [base+32], d;
+    fma.rn.f32x2 d, a, b, c;
+    st.u64 [base+40], d;
+    ret;
+}

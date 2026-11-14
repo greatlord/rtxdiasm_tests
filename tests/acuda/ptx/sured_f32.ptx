@@ -1,0 +1,19 @@
+// Storage-image f32 atomic add (compile-only on devices without
+// shaderImageFloat32AtomicAdd). The bound image must use an
+// atomic-capable f32 format (R32_SFLOAT).
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry sured_f32(.param .surfref surf, .param .u64 out)
+{
+    .reg .u32 %r<3>;
+    .reg .u64 %rd<2>;
+    .reg .f32 %f<2>;
+    ld.param.u64 %rd1, [out];
+    mov.u32 %r1, 0;
+    mov.u32 %r2, 0;
+    mov.f32 %f1, 0f3F800000;
+    sured.p.add.2d.f32.trap [surf, {%r1, %r2}], %f1;
+    st.global.u32 [%rd1], %r1;
+    ret;
+}

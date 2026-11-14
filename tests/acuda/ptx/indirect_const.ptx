@@ -1,0 +1,25 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.func (.reg .u64 out) add_one(.reg .u64 x)
+{
+    add.u64 out, x, 0x10;
+    ret;
+}
+.func (.reg .u64 out) add_two(.reg .u64 x)
+{
+    add.u64 out, x, 0x20;
+    ret;
+}
+.const .u64 ctbl[2] = { add_one, add_two };
+.visible .entry indirect_const(.param .u64 data)
+{
+    .reg .u64 base, val, r, f;
+    ld.param.u64 base, [data];
+    ld.global.u64 val, [base];
+    ld.const.u64 f, [ctbl+8];
+tgt: .calltargets add_one, add_two;
+    call (r), f, (val), tgt;
+    st.u64 [base+8], r;
+    ret;
+}

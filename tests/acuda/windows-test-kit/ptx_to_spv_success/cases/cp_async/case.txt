@@ -1,0 +1,3 @@
+entry=cp_async
+args=--run-buffer-hex 16:00000000000000000000000000000000
+expected_regex=buf0\[0\]=1[\s\S]*buf0\[1\]=2[\s\S]*buf0\[2\]=3[\s\S]*buf0\[3\]=0

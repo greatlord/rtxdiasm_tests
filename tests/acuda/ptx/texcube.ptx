@@ -1,0 +1,19 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry texcube(.param .texref tex, .param .u64 out)
+{
+    .reg .f32 s, t, r, pad, r0, r1, r2, r3;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.f32 s, 0f00000000;
+    mov.f32 t, 0f00000000;
+    mov.f32 r, 0f3F800000;
+    mov.f32 pad, 0f00000000;
+    tex.cube.v4.f32.f32 {r0, r1, r2, r3}, [tex, {s, t, r, pad}];
+    st.global.f32 [p], r0;
+    st.global.f32 [p+4], r1;
+    st.global.f32 [p+8], r2;
+    st.global.f32 [p+12], r3;
+    ret;
+}

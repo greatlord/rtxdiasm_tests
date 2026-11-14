@@ -1,0 +1,47 @@
+.version 7.0
+.target sm_80
+.address_size 64
+
+// Scalar brain-float path: setp.eq.b32 (word-equality form),
+// cvt.rn.f32.u32 (integer to float), cvt.rn.bf16.f32 (narrow to bf16
+// bits), sub-word st.u16 of the pattern. Hand-written: the corpus
+// files needing these (uint_to_fp_bf16, mma_*) are blocked on
+// multi-branch flow / tensor ops, so this kernel pins the conversions
+// directly. Lane tid computes b = (tid == 0) ? 7 : 9 and stores the
+// bf16 pattern of (float)b plus a u32 witness.
+//
+// CHECK: lane0 -> out16 = 0x40E0 (bf16 7.0), out32 = 7;
+//        laneN -> out16 = 0x4110 (bf16 9.0), out32 = 9.
+.visible .entry bf16_cvt(
+    .param .u64 out16,
+    .param .u64 out32
+)
+{
+    .reg .u64 a16, a32, off16, off32;
+    .reg .u32 tid, u, b;
+    .reg .f32 f;
+    .reg .b16 h;
+    .reg .pred p;
+
+    ld.param.u64 a16, [out16];
+    ld.param.u64 a32, [out32];
+    mov.u32 tid, %tid.x;
+
+    add.u32 u, tid, 1;
+    setp.eq.b32 p, u, 1;
+    selp.u32 b, 7, 9, p;
+    cvt.rn.f32.u32 f, b;
+    cvt.rn.bf16.f32 h, f;
+
+    cvt.u64.u32 off16, tid;
+    mul.lo.u64 off16, off16, 2;
+    add.u64 a16, a16, off16;
+    st.global.u16 [a16], h;
+
+    cvt.u64.u32 off32, tid;
+    mul.lo.u64 off32, off32, 4;
+    add.u64 a32, a32, off32;
+    st.u32 [a32], b;
+
+    ret;
+}

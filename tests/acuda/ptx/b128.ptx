@@ -1,0 +1,13 @@
+.version 8.3
+.target sm_80
+.address_size 64
+.visible .entry b128(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .b128 r, s;
+    ld.param.u64 a, [p];
+    ld.global.b128 r, [a];
+    mov.b128 s, r;
+    st.global.b128 [a], s;
+    ret;
+}

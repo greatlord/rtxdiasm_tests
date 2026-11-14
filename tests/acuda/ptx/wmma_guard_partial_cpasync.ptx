@@ -1,0 +1,24 @@
+// WMMA shared A/B loads plus a partial cp.async: the typed 16-bit shared
+// view must stay off because the byte-wise fill cannot use it.
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_guard_partial_cpasync(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .u32 %stride, %sa;
+    .reg .b32 %a<8>, %b<8>;
+
+    .shared .align 16 .b8 s[1024];
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %stride, 16;
+    mov.u32 %sa, s;
+    cp.async.ca.shared.global [%sa], [%rd], 16, 8;
+    wmma.load.a.sync.aligned.m16n16k16.shared.row.f16
+        {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7}, [%sa], %stride;
+    wmma.load.b.sync.aligned.m16n16k16.shared.col.f16
+        {%b0,%b1,%b2,%b3,%b4,%b5,%b6,%b7}, [%sa+512], %stride;
+    ret;
+}

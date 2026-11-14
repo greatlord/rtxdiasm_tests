@@ -1,0 +1,25 @@
+// ACUDA-EXTENSION: ptxas rejects this PTX form (see supported-isa.md).
+// f16 and packed f16x2 division. ptxas has no such PTX forms; this is an
+// ACuda extension that widens each lane to f32, divides, and rounds once
+// back to half. Inputs: 6.0/2.0 scalar, packed (6.0,2.0)/(2.0,4.0).
+.version 8.0
+.target sm_80
+.address_size 64
+.visible .entry f16div(.param .u64 p)
+{
+    .reg .u64 %rd1;
+    .reg .f16 %c;
+    .reg .f16x2 %x;
+    .reg .u16 %a, %b;
+    .reg .u32 %v, %w;
+    ld.param.u64 %rd1, [p];
+    ld.global.b16 %a, [%rd1+8];
+    ld.global.b16 %b, [%rd1+10];
+    ld.global.b32 %v, [%rd1+12];
+    ld.global.b32 %w, [%rd1+16];
+    div.rn.f16 %c, %a, %b;
+    st.global.b16 [%rd1], %c;
+    div.rn.f16x2 %x, %v, %w;
+    st.global.b32 [%rd1+4], %x;
+    ret;
+}

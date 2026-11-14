@@ -1,0 +1,34 @@
+// Shared-memory f32 atomic add: one contended `red` slot and one
+// contended `atom` slot (the atom result is written per lane, so the
+// host can check that every old value is distinct). All lanes zero the
+// two slots before the barrier because shared memory starts
+// uninitialized; the store is the same value from every lane.
+.version 8.5
+.target sm_80
+.address_size 64
+.visible .shared .align 4 .b8 sh[8];
+.visible .entry atom_shared_f32(.param .u64 io)
+{
+    .reg .u64 %rd<4>;
+    .reg .u32 %r<3>;
+    .reg .f32 %f<6>;
+    ld.param.u64 %rd1, [io];
+    mov.u32 %r1, %tid.x;
+    cvta.to.global.u64 %rd2, %rd1;
+    mov.f32 %f5, 0f00000000;
+    st.shared.f32 [sh], %f5;
+    st.shared.f32 [sh+4], %f5;
+    bar.sync 0;
+    mov.f32 %f1, 0f3F800000;
+    red.shared.add.f32 [sh], %f1;
+    atom.shared.add.f32 %f2, [sh+4], %f1;
+    bar.sync 0;
+    mul.wide.u32 %rd3, %r1, 4;
+    add.u64 %rd3, %rd2, %rd3;
+    st.global.f32 [%rd3], %f2;
+    ld.shared.f32 %f3, [sh];
+    ld.shared.f32 %f4, [sh+4];
+    st.global.f32 [%rd3+1024], %f3;
+    st.global.f32 [%rd3+2048], %f4;
+    ret;
+}

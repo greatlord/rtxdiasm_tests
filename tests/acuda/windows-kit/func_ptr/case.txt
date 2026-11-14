@@ -1,0 +1,3 @@
+entry=func_ptr
+invariant=func_ptr
+block=1

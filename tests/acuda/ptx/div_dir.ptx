@@ -1,0 +1,21 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed-rounding f32 division (exact integer long division).
+.visible .entry div_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f32 a, b, r;
+    ld.param.u64 base, [data];
+    ld.f32 a, [base];
+    ld.f32 b, [base+4];
+    div.rp.f32 r, a, b;
+    st.f32 [base+8], r;
+    div.rm.f32 r, a, b;
+    st.f32 [base+12], r;
+    div.rz.f32 r, a, b;
+    st.f32 [base+16], r;
+    div.rn.f32 r, a, b;
+    st.f32 [base+20], r;
+    ret;
+}

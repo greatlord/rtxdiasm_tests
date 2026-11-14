@@ -1,0 +1,28 @@
+.version 6.5
+.target sm_30
+.address_size 64
+.func (.reg .u64 out) add_one(.reg .u64 x)
+{
+    add.u64 out, x, 0x10;
+    ret;
+}
+.func (.reg .u64 out) add_two(.reg .u64 x)
+{
+    add.u64 out, x, 0x20;
+    ret;
+}
+.visible .entry indirect_selp(.param .u64 data)
+{
+    .reg .u64 base, val, r, f, fa, fb;
+    .reg .pred pc;
+    ld.param.u64 base, [data];
+    ld.global.u64 val, [base];
+    mov.u64 fa, add_one;
+    mov.u64 fb, add_two;
+    setp.eq.u64 pc, val, 0;
+    selp.u64 f, fa, fb, pc;
+proto: .callprototype (.param .b64 r) _ (.param .b64 x);
+    call (r), f, (val), proto;
+    st.u64 [base+8], r;
+    ret;
+}

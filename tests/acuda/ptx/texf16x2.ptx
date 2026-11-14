@@ -1,0 +1,16 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry texf16x2(.param .texref tex, .param .u64 out)
+{
+    .reg .f32 s, t;
+    .reg .b32 x0, x1;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.f32 s, 0f3E800000;
+    mov.f32 t, 0f3E800000;
+    tex.2d.v2.f16x2.f32 {x0, x1}, [tex, {s, t}];
+    st.global.b32 [p], x0;
+    st.global.b32 [p+4], x1;
+    ret;
+}

@@ -1,0 +1,17 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry surf3d(.param .surfref surf, .param .u64 out)
+{
+    .reg .u32 r0;
+    .reg .s32 x, y, z, w2;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.s32 x, 0;
+    mov.s32 y, 0;
+    mov.s32 z, 1;
+    mov.s32 w2, 0;
+    suld.b.3d.b32.trap r0, [surf, {x, y, z, w2}];
+    st.global.u32 [p], r0;
+    ret;
+}

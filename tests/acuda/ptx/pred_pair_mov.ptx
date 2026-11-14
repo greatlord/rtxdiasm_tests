@@ -1,0 +1,25 @@
+.version 7.1
+.target sm_86
+.address_size 64
+.visible .entry pp(.param .u64 out)
+{
+    .reg .b32 %r18, %r19;
+    .reg .pred %p1, %p2;
+    .reg .f64 %d0;
+    .reg .b64 %rd1;
+    ld.param.u64 %rd1, [out];
+    mov.b64 %d0, 0x3fd0000000000000;
+    // False predicate: the pair must keep its old value.
+    mov.b64 {%r18, %r19}, %d0;
+    setp.eq.u32 %p1, 0, 1;
+    @%p1 mov.b64 {%r18, %r19}, 0;
+    st.global.u32 [%rd1], %r18;
+    st.global.u32 [%rd1+4], %r19;
+    // True predicate: the pair must be replaced.
+    mov.b64 {%r18, %r19}, %d0;
+    setp.eq.u32 %p2, 1, 1;
+    @%p2 mov.b64 {%r18, %r19}, 0;
+    st.global.u32 [%rd1+8], %r18;
+    st.global.u32 [%rd1+12], %r19;
+    ret;
+}

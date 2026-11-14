@@ -1,0 +1,53 @@
+// WMMA m16n16k16 f16 x f16 -> f32 with the C fragment staged through
+// shared memory.  The shared tile is f32, so the compiler must keep the
+// typed 16-bit shared view disabled.  Same A/B/C layout as wmma.ptx.
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_shared_c(.param .u64 p)
+{
+    .reg .u64 %rd, %gbase, %ga;
+    .reg .u32 %stride, %t, %sa;
+    .reg .b32 %a<8>, %b<8>, %c<8>;
+
+    .shared .align 16 .b8 sc[1024];
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %stride, 16;
+
+    // 32 lanes * 32 bytes = the 1024-byte C tile.
+    mov.u32 %t, %tid.x;
+    mov.u32 %sa, sc;
+    mad.lo.u32 %sa, %t, 32, %sa;
+    add.u64 %gbase, %rd, 1024;
+    mad.wide.u32 %ga, %t, 32, %gbase;
+
+    cp.async.ca.shared.global [%sa], [%ga], 16;
+    add.u32 %sa, %sa, 16;
+    add.u64 %ga, %ga, 16;
+    cp.async.ca.shared.global [%sa], [%ga], 16;
+    cp.async.commit_group;
+    cp.async.wait_all;
+    bar.sync 0;
+
+    wmma.load.a.sync.aligned.m16n16k16.global.row.f16
+        {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7}, [%rd], %stride;
+    wmma.load.b.sync.aligned.m16n16k16.global.col.f16
+        {%b0,%b1,%b2,%b3,%b4,%b5,%b6,%b7}, [%rd+512], %stride;
+
+    mov.u32 %sa, sc;
+    wmma.load.c.sync.aligned.m16n16k16.shared.row.f32
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7}, [%sa], %stride;
+
+    wmma.mma.sync.aligned.row.col.m16n16k16.f32.f32
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7},
+        {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7},
+        {%b0,%b1,%b2,%b3,%b4,%b5,%b6,%b7},
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7};
+
+    wmma.store.d.sync.aligned.m16n16k16.global.row.f32
+        [%rd+2048], {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7}, %stride;
+    ret;
+}

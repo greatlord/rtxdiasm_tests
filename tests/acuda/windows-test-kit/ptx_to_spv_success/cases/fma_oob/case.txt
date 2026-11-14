@@ -1,0 +1,3 @@
+entry=k
+args=--run-buffer-hex 4:00000000
+expected=buf0[0]=16384

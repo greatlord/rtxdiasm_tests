@@ -1,0 +1,21 @@
+.version 6.0
+.target sm_35
+.address_size 64
+
+.func f(.param .u32 p)
+{
+    ret;
+}
+
+.visible .entry k(
+    .param .u32 input
+)
+{
+    .reg .u32 value;
+    .param .u32 arg;
+
+    ld.param.u32 value, [input];
+    st.param.u32 [arg], value;
+    call.uni f, (arg);
+    ret;
+}

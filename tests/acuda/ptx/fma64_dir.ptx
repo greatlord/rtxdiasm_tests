@@ -1,0 +1,24 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed-rounding f64 fma plus fused mad: rp, rm, rz, rn, mad.
+.visible .entry fma64_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f64 a, b, c, r;
+    ld.param.u64 base, [data];
+    ld.f64 a, [base];
+    ld.f64 b, [base+8];
+    ld.f64 c, [base+16];
+    fma.rp.f64 r, a, b, c;
+    st.f64 [base+24], r;
+    fma.rm.f64 r, a, b, c;
+    st.f64 [base+32], r;
+    fma.rz.f64 r, a, b, c;
+    st.f64 [base+40], r;
+    fma.rn.f64 r, a, b, c;
+    st.f64 [base+48], r;
+    mad.rn.f64 r, a, b, c;
+    st.f64 [base+56], r;
+    ret;
+}

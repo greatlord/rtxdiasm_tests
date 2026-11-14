@@ -1,0 +1,32 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry txqonly(.param .texref tex, .param .u64 out)
+{
+    .reg .u32 w;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    txq.width.b32 w, [tex];
+    st.global.u32 [p], w;
+    txq.height.b32 w, [tex];
+    st.global.u32 [p+4], w;
+    txq.depth.b32 w, [tex];
+    st.global.u32 [p+8], w;
+    txq.array_size.b32 w, [tex];
+    st.global.u32 [p+12], w;
+    txq.num_mipmap_levels.b32 w, [tex];
+    st.global.u32 [p+16], w;
+    txq.num_samples.b32 w, [tex];
+    st.global.u32 [p+20], w;
+    txq.filter_mode.b32 w, [tex];
+    st.global.u32 [p+24], w;
+    txq.addr_mode_0.b32 w, [tex];
+    st.global.u32 [p+28], w;
+    txq.addr_mode_1.b32 w, [tex];
+    st.global.u32 [p+32], w;
+    txq.addr_mode_2.b32 w, [tex];
+    st.global.u32 [p+36], w;
+    txq.normalized_coords.b32 w, [tex];
+    st.global.u32 [p+40], w;
+    ret;
+}

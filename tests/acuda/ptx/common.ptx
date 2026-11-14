@@ -1,0 +1,26 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.common .global .align 8 .u64 ctr;
+.common .global .align 4 .u32 arr[2];
+.visible .entry common(.param .u64 p)
+{
+    .reg .u64 x, v, rd, val;
+    .reg .u32 w;
+    ld.param.u64 x, [p];
+    ld.global.u64 v, [ctr];
+    st.global.u64 [x], v;
+    mov.u64 rd, ctr;
+    mov.u64 val, 42;
+    st.global.u64 [rd], val;
+    ld.global.u64 v, [rd];
+    st.global.u64 [x+8], v;
+    mov.u32 w, 7;
+    st.global.u32 [arr+4], w;
+    ld.global.u32 w, [arr+4];
+    st.global.u32 [x+16], w;
+    mov.u64 rd, arr;
+    ld.global.u32 w, [rd+4];
+    st.global.u32 [x+20], w;
+    ret;
+}

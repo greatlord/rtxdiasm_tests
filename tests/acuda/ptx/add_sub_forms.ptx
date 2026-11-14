@@ -1,0 +1,63 @@
+// Scalar add/sub forms from the PTX ISA add table plus the sm_90 packed
+// half-word adds. ptxas-clean at .version 8.8 / sm_90.
+.version 8.8
+.target sm_90
+.address_size 64
+.visible .entry add_sub_forms(.param .u64 p)
+{
+    .reg .u64 %rd1, %x, %y, %z;
+    .reg .s64 %sx, %sy, %sz;
+    .reg .u16 %ua, %ub, %ud;
+    .reg .s32 %sa, %sb, %sd;
+    .reg .b32 %pa, %pb, %pd;
+    ld.param.u64 %rd1, [p];
+
+    // add.u16 / sub.u16: 0xFFF0 +/- 0x0020 (wrap).
+    ld.global.u16 %ua, [%rd1];
+    ld.global.u16 %ub, [%rd1+2];
+    add.u16 %ud, %ua, %ub;
+    st.global.u16 [%rd1+72], %ud;
+    sub.u16 %ud, %ua, %ub;
+    st.global.u16 [%rd1+76], %ud;
+
+    // add.u64 / sub.u64: -16 + 32 and 32 - 48 (wrap at 64 bits).
+    ld.global.u64 %x, [%rd1+8];
+    ld.global.u64 %y, [%rd1+16];
+    add.u64 %z, %x, %y;
+    st.global.u64 [%rd1+80], %z;
+    ld.global.u64 %x, [%rd1+24];
+    ld.global.u64 %y, [%rd1+32];
+    sub.u64 %z, %x, %y;
+    st.global.u64 [%rd1+88], %z;
+
+    // add.s64 / sub.s64: same bit patterns through the signed spelling.
+    ld.global.s64 %sx, [%rd1+8];
+    ld.global.s64 %sy, [%rd1+16];
+    add.s64 %sz, %sx, %sy;
+    st.global.s64 [%rd1+96], %sz;
+    ld.global.s64 %sx, [%rd1+24];
+    ld.global.s64 %sy, [%rd1+32];
+    sub.s64 %sz, %sx, %sy;
+    st.global.s64 [%rd1+104], %sz;
+
+    // add.sat.s32 (INT_MAX + 1) / sub.sat.s32 (INT_MIN - 1).
+    ld.global.s32 %sa, [%rd1+40];
+    ld.global.s32 %sb, [%rd1+44];
+    add.sat.s32 %sd, %sa, %sb;
+    st.global.s32 [%rd1+112], %sd;
+    ld.global.s32 %sa, [%rd1+48];
+    ld.global.s32 %sb, [%rd1+52];
+    sub.sat.s32 %sd, %sa, %sb;
+    st.global.s32 [%rd1+116], %sd;
+
+    // Packed half-word adds (sm_90+): lane-wise wrap.
+    ld.global.b32 %pa, [%rd1+56];
+    ld.global.b32 %pb, [%rd1+60];
+    add.u16x2 %pd, %pa, %pb;
+    st.global.b32 [%rd1+120], %pd;
+    ld.global.b32 %pa, [%rd1+64];
+    ld.global.b32 %pb, [%rd1+68];
+    add.s16x2 %pd, %pa, %pb;
+    st.global.b32 [%rd1+124], %pd;
+    ret;
+}

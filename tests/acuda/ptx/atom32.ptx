@@ -1,0 +1,24 @@
+.version 8.0
+.target sm_80
+.address_size 64
+.visible .entry atom32(.param .u64 p)
+{
+ .reg .u64 a;
+ .reg .u32 o, last;
+ ld.param.u64 a, [p];
+ atom.and.b32 o, [a], 0x33;
+ st.global.u32 [a+4], o;
+ atom.or.b32 o, [a], 0x0c;
+ st.global.u32 [a+8], o;
+ atom.xor.b32 o, [a], 0xff;
+ st.global.u32 [a+12], o;
+ atom.exch.b32 o, [a], 0x55;
+ st.global.u32 [a+16], o;
+ atom.min.u32 o, [a], 0x10;
+ st.global.u32 [a+20], o;
+ atom.dec.u32 o, [a], 0x20;
+ st.global.u32 [a+24], o;
+ ld.global.u32 last, [a];
+ st.global.u32 [a+28], last;
+ ret;
+}

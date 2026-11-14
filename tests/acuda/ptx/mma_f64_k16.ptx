@@ -1,0 +1,50 @@
+// Dense warp matmul mma.sync.aligned.m16n8k16.row.col.f64.f64.f64.f64.
+// Requires sm_90 or higher (target-gated). Per-lane fragments: A 8,
+// B 4, C/D 4 .f64 registers.
+
+.version 8.0
+.target sm_90
+.address_size 64
+
+.visible .entry mma_f64_k16(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .f64 %a<8>, %b<4>, %c<4>, %d<4>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 64, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f64 %a0, [%pa+0];
+    ld.global.f64 %a1, [%pa+8];
+    ld.global.f64 %a2, [%pa+16];
+    ld.global.f64 %a3, [%pa+24];
+    ld.global.f64 %a4, [%pa+32];
+    ld.global.f64 %a5, [%pa+40];
+    ld.global.f64 %a6, [%pa+48];
+    ld.global.f64 %a7, [%pa+56];
+    mad.wide.u32 %off, %lane, 32, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f64 %b0, [%pa+2048];
+    ld.global.f64 %b1, [%pa+2056];
+    ld.global.f64 %b2, [%pa+2064];
+    ld.global.f64 %b3, [%pa+2072];
+    mad.wide.u32 %off, %lane, 32, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.f64 %c0, [%pa+3072];
+    ld.global.f64 %c1, [%pa+3080];
+    ld.global.f64 %c2, [%pa+3088];
+    ld.global.f64 %c3, [%pa+3096];
+    mma.sync.aligned.m16n8k16.row.col.f64.f64.f64.f64
+        {%d0,%d1,%d2,%d3}, {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7}, {%b0,%b1,%b2,%b3},
+        {%c0,%c1,%c2,%c3};
+
+    st.global.f64 [%pa+4096], %d0;
+    st.global.f64 [%pa+4104], %d1;
+    st.global.f64 [%pa+4112], %d2;
+    st.global.f64 [%pa+4120], %d3;
+    ret;
+}

@@ -1,0 +1,35 @@
+// Dense mma m8n8k128 b1 x b1 -> s32, AND-POPC.
+// A 0..127, B 128..255, C 256..511, D 512..767 (bytes).
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry mma_b1_m8n8k128_and(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a, %b;
+    .reg .s32 %c<2>, %d<2>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a, [%pa];
+    ld.global.b32 %b, [%pa+128];
+
+    mad.wide.u32 %off, %lane, 8, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.s32 %c0, [%pa+256];
+    ld.global.s32 %c1, [%pa+260];
+
+    mma.sync.aligned.m8n8k128.row.col.s32.b1.b1.s32.and.popc
+        {%d0,%d1}, {%a}, {%b}, {%c0,%c1};
+
+    st.global.s32 [%pa+512], %d0;
+    st.global.s32 [%pa+516], %d1;
+    ret;
+}

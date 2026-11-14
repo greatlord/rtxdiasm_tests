@@ -1,0 +1,20 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry ldtest(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .u32 r;
+    ld.param.u64 a, [p];
+    ld.global.L1::evict_last.u32 r, [a];
+    st.global.L1::evict_first.u32 [a+4], r;
+    ld.global.L2::64B.u32 r, [a+8];
+    ld.volatile.global.u32 r, [a+12];
+    ld.weak.global.u32 r, [a+16];
+    ld.relaxed.gpu.global.u32 r, [a+20];
+    ld.acquire.gpu.global.u32 r, [a+24];
+    st.release.gpu.global.u32 [a+28], r;
+    ld.global.L2::cache_hint.u32 r, [a+32], 0;
+    st.global.L2::cache_hint.u32 [a+36], r, 0;
+    ret;
+}

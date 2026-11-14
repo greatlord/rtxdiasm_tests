@@ -1,0 +1,20 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed-rounding f32 add/sub through the integer software FMA
+// (exact for subnormal results, which the hardware adder flushes).
+.visible .entry add_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f32 a, b, r;
+    ld.param.u64 base, [data];
+    ld.f32 a, [base];
+    ld.f32 b, [base+4];
+    add.rp.f32 r, a, b;
+    st.f32 [base+8], r;
+    add.rm.f32 r, a, b;
+    st.f32 [base+12], r;
+    add.rz.f32 r, a, b;
+    st.f32 [base+16], r;
+    ret;
+}

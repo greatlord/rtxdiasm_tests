@@ -1,0 +1,41 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_u8(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .f32 f0, f1, f2, f3;
+    .reg .u32 r;
+    .reg .u8 u;
+    .reg .s8 s;
+    ld.param.u64 a, [p];
+    ld.f32 f0, [a];
+    ld.f32 f1, [a+4];
+    ld.f32 f2, [a+8];
+    ld.f32 f3, [a+12];
+    cvt.rzi.u8.f32 u, f0;
+    cvt.u32.u8 r, u;
+    st.u32 [a+16], r;
+    cvt.rzi.u8.f32 u, f1;
+    cvt.u32.u8 r, u;
+    st.u32 [a+20], r;
+    cvt.rzi.u8.f32 u, f2;
+    cvt.u32.u8 r, u;
+    st.u32 [a+24], r;
+    cvt.rzi.u8.f32 u, f3;
+    cvt.u32.u8 r, u;
+    st.u32 [a+28], r;
+    cvt.rni.s8.f32 s, f0;
+    cvt.s32.s8 r, s;
+    st.u32 [a+32], r;
+    cvt.rni.s8.f32 s, f1;
+    cvt.s32.s8 r, s;
+    st.u32 [a+36], r;
+    cvt.rni.s8.f32 s, f2;
+    cvt.s32.s8 r, s;
+    st.u32 [a+40], r;
+    cvt.rni.s8.f32 s, f3;
+    cvt.s32.s8 r, s;
+    st.u32 [a+44], r;
+    ret;
+}

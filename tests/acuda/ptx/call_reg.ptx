@@ -1,0 +1,39 @@
+// Direct .reg-form call (inlined): multi-return callee without any
+// predicated stores (predicated st stays out of subset, so the flag
+// is materialized with predicated mov instead).
+.version 6.5
+.target sm_30
+.address_size 64
+
+.func (.reg .u32 r, .reg .pred p) do_twice(
+    .reg .u32 x
+)
+{
+    add.u32     r, x, 1;
+    setp.lt.u32 p, x, 10;
+    ret;
+}
+
+.visible .entry callreg(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64  in_addr;
+    .reg .u64  out_addr;
+    .reg .u32  temp;
+    .reg .u32  temp2;
+    .reg .pred temp3;
+    .reg .u32  flag;
+
+    ld.param.u64 in_addr, [input];
+    ld.param.u64 out_addr, [output];
+
+    ld.u32       temp, [in_addr];
+    call         (temp2, temp3), do_twice, (temp);
+    st.u32       [out_addr], temp2;
+    mov.u32      flag, 0;
+    @temp3 mov.u32 flag, 1;
+    st.u32       [out_addr+4], flag;
+    ret;
+}

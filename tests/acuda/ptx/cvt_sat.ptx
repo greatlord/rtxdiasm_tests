@@ -1,0 +1,32 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_sat(.param .u64 p)
+{
+    .reg .u64 a;
+    .reg .s32 s;
+    .reg .u32 r;
+    .reg .u8 u8; .reg .s8 s8; .reg .u16 u16; .reg .s16 s16;
+    ld.param.u64 a, [p];
+    ld.s32 s, [a];
+    cvt.sat.u8.s32 u8, s;   cvt.u32.u8 r, u8;   st.u32 [a+16], r;
+    cvt.sat.s8.s32 s8, s;   cvt.s32.s8 r, s8;   st.u32 [a+20], r;
+    cvt.sat.u16.s32 u16, s; cvt.u32.u16 r, u16; st.u32 [a+24], r;
+    cvt.sat.s16.s32 s16, s; cvt.s32.s16 r, s16; st.u32 [a+28], r;
+    ld.s32 s, [a+4];
+    cvt.sat.u8.s32 u8, s;   cvt.u32.u8 r, u8;   st.u32 [a+32], r;
+    cvt.sat.s8.s32 s8, s;   cvt.s32.s8 r, s8;   st.u32 [a+36], r;
+    cvt.sat.u16.s32 u16, s; cvt.u32.u16 r, u16; st.u32 [a+40], r;
+    cvt.sat.s16.s32 s16, s; cvt.s32.s16 r, s16; st.u32 [a+44], r;
+    ld.s32 s, [a+8];
+    cvt.sat.u8.s32 u8, s;   cvt.u32.u8 r, u8;   st.u32 [a+48], r;
+    cvt.sat.s8.s32 s8, s;   cvt.s32.s8 r, s8;   st.u32 [a+52], r;
+    cvt.sat.u16.s32 u16, s; cvt.u32.u16 r, u16; st.u32 [a+56], r;
+    cvt.sat.s16.s32 s16, s; cvt.s32.s16 r, s16; st.u32 [a+60], r;
+    ld.s32 s, [a+12];
+    cvt.sat.u8.s32 u8, s;   cvt.u32.u8 r, u8;   st.u32 [a+64], r;
+    cvt.sat.s8.s32 s8, s;   cvt.s32.s8 r, s8;   st.u32 [a+68], r;
+    cvt.sat.u16.s32 u16, s; cvt.u32.u16 r, u16; st.u32 [a+72], r;
+    cvt.sat.s16.s32 s16, s; cvt.s32.s16 r, s16; st.u32 [a+76], r;
+    ret;
+}

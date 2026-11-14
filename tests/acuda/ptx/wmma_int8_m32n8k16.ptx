@@ -1,0 +1,35 @@
+// Warp-level WMMA m32n8k16 u8 x u8 -> s32, ACuda-private layout.
+// A 0..511, B 512..639, C 640..1663, D 1664..2687.
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_int8_m32n8k16(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .u32 %sa, %sb, %sc;
+    .reg .b32 %a<4>, %b<1>;
+    .reg .s32 %c<8>, %d<8>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %sa, 16;
+    mov.u32 %sb, 16;
+    mov.u32 %sc, 8;
+
+    wmma.load.a.sync.aligned.m32n8k16.global.row.u8
+        {%a0,%a1,%a2,%a3}, [%rd], %sa;
+    wmma.load.b.sync.aligned.m32n8k16.global.col.u8
+        {%b0}, [%rd+512], %sb;
+    wmma.load.c.sync.aligned.m32n8k16.global.row.s32
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7}, [%rd+640], %sc;
+
+    wmma.mma.sync.aligned.row.col.m32n8k16.s32.u8.u8.s32
+        {%d0,%d1,%d2,%d3,%d4,%d5,%d6,%d7},
+        {%a0,%a1,%a2,%a3}, {%b0},
+        {%c0,%c1,%c2,%c3,%c4,%c5,%c6,%c7};
+
+    wmma.store.d.sync.aligned.m32n8k16.global.row.s32
+        [%rd+1664], {%d0,%d1,%d2,%d3,%d4,%d5,%d6,%d7}, %sc;
+    ret;
+}

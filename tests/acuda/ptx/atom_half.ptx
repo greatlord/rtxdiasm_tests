@@ -1,0 +1,27 @@
+.version 8.6
+.target sm_90
+.address_size 64
+.visible .entry atom_half_rt(.param .u64 io)
+{
+    .reg .u64 rd;
+    .reg .b16 c, s, oldh;
+    .reg .b16 hf, oldf, hb, oldb;
+    .reg .b32 p, oldp, bp, oldbp;
+    ld.param.u64 rd, [io];
+    mov.b16 c, 0x1234;
+    mov.b16 s, 0x5678;
+    atom.cas.b16 oldh, [rd], c, s;
+    st.u16 [rd+20], oldh;
+    mov.b16 c, 0x9999;
+    atom.cas.b16 oldh, [rd], c, s;
+    st.u16 [rd+22], oldh;
+    mov.b16 hf, 0x3C00;
+    atom.add.noftz.f16 oldf, [rd+4], hf;
+    mov.b16 hb, 0x3F80;
+    atom.add.noftz.bf16 oldb, [rd+8], hb;
+    mov.b32 p, 0x3C003C00;
+    atom.add.noftz.f16x2 oldp, [rd+12], p;
+    mov.b32 bp, 0x3F803F80;
+    atom.add.noftz.bf16x2 oldbp, [rd+16], bp;
+    ret;
+}

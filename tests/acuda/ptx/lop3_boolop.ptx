@@ -1,0 +1,27 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry lop3bool(.param .u64 out)
+{
+    .reg .u64 o;
+    .reg .b32 a, b, c, d1, d2, d3;
+    .reg .pred p1, p2, p3, q;
+    .reg .u32 r1, r2, r3;
+    ld.param.u64 o, [out];
+    mov.b32 a, 0x0f;
+    mov.b32 b, 0x33;
+    mov.b32 c, 0x55;
+    setp.eq.u32 q, 1, 1;
+    lop3.or.b32 d1|p1, a, b, c, 0xfe, q;
+    lop3.and.b32 d2|p2, a, b, c, 0x00, q;
+    lop3.or.b32 d3|p3, a, b, c, 0xfe, q;
+    selp.u32 r1, 1, 0, p1;
+    selp.u32 r2, 1, 0, p2;
+    selp.u32 r3, 1, 0, p3;
+    st.u32 [o], d1;
+    st.u32 [o+4], r1;
+    st.u32 [o+8], d2;
+    st.u32 [o+12], r2;
+    st.u32 [o+16], r3;
+    ret;
+}

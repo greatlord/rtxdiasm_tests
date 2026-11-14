@@ -1,0 +1,39 @@
+// Warp-level WMMA m16n16k16 f16 x f16 -> f16, with a consistent
+// ACuda-private fragment mapping (PTX leaves WMMA fragment identity
+// target-dependent). Lane l owns:
+//   A: row l>>1, columns 8*(l&1) + 0..7 (row-major, 8 regs)
+//   B: column l>>1, rows 8*(l&1) + 0..7 (column-major storage, 8 regs)
+//   C/D: row l>>1, columns 8*(l&1) + 0..7 (4 packed f16x2 regs)
+// The kernel computes D = A*B + C with A = I and B[k][c] = 16*k+c,
+// so D[r][c] = 2*(16*r+c); all values are exact in f16.
+
+.version 8.0
+.target sm_80
+.address_size 64
+
+.visible .entry wmma_f16acc(.param .u64 p)
+{
+    .reg .u64 %rd;
+    .reg .u32 %stride;
+    .reg .b32 %a<8>, %b<8>, %c<4>, %d<4>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %stride, 16;
+
+    wmma.load.a.sync.aligned.m16n16k16.global.row.f16
+        {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7}, [%rd], %stride;
+    wmma.load.b.sync.aligned.m16n16k16.global.col.f16
+        {%b0,%b1,%b2,%b3,%b4,%b5,%b6,%b7}, [%rd+512], %stride;
+    wmma.load.c.sync.aligned.m16n16k16.global.row.f16
+        {%c0,%c1,%c2,%c3}, [%rd+1024], %stride;
+
+    wmma.mma.sync.aligned.row.col.m16n16k16.f16.f16
+        {%d0,%d1,%d2,%d3},
+        {%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7},
+        {%b0,%b1,%b2,%b3,%b4,%b5,%b6,%b7},
+        {%c0,%c1,%c2,%c3};
+
+    wmma.store.d.sync.aligned.m16n16k16.global.row.f16
+        [%rd+1536], {%d0,%d1,%d2,%d3}, %stride;
+    ret;
+}

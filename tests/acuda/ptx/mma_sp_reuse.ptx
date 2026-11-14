@@ -1,0 +1,67 @@
+// Two sparse warp matmuls sharing the same A/B/metadata fragments, to
+// exercise the within-block A-packing reuse:
+// mma.sp.aligned.m16n8k32.row.col.f32.f16.f16.f32, C = 0.
+// Buffer words: A 0..127 (4/lane), metadata 128..159 (1/lane),
+// B 160..287 (4/lane), D0 288..415 (4/lane), D1 416..543 (4/lane).
+
+.version 8.5
+.target sm_80
+.address_size 64
+
+.visible .entry mma_sp_reuse(.param .u64 p)
+{
+    .reg .u64 %rd, %pa, %off, %zero;
+    .reg .u32 %lane;
+    .reg .b32 %a<4>, %b<4>, %e;
+    .reg .f32 %d<4>, %f<4>;
+
+    ld.param.u64 %rd, [p];
+    mov.u32 %lane, %laneid;
+    mov.u64 %zero, 0;
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %a0, [%pa];
+    ld.global.b32 %a1, [%pa+4];
+    ld.global.b32 %a2, [%pa+8];
+    ld.global.b32 %a3, [%pa+12];
+
+    mad.wide.u32 %off, %lane, 4, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %e, [%pa+512];
+
+    mad.wide.u32 %off, %lane, 16, %zero;
+    add.u64 %pa, %rd, %off;
+    ld.global.b32 %b0, [%pa+640];
+    ld.global.b32 %b1, [%pa+644];
+    ld.global.b32 %b2, [%pa+648];
+    ld.global.b32 %b3, [%pa+652];
+
+    mov.f32 %d0, 0f00000000;
+    mov.f32 %d1, 0f00000000;
+    mov.f32 %d2, 0f00000000;
+    mov.f32 %d3, 0f00000000;
+    mov.f32 %f0, 0f00000000;
+    mov.f32 %f1, 0f00000000;
+    mov.f32 %f2, 0f00000000;
+    mov.f32 %f3, 0f00000000;
+
+    mma.sp::ordered_metadata.sync.aligned.m16n8k32.row.col.f32.f16.f16.f32
+        {%d0,%d1,%d2,%d3}, {%a0,%a1,%a2,%a3}, {%b0,%b1,%b2,%b3},
+        {%d0,%d1,%d2,%d3}, %e, 0;
+
+    st.global.f32 [%pa+1152], %d0;
+    st.global.f32 [%pa+1156], %d1;
+    st.global.f32 [%pa+1160], %d2;
+    st.global.f32 [%pa+1164], %d3;
+
+    mma.sp::ordered_metadata.sync.aligned.m16n8k32.row.col.f32.f16.f16.f32
+        {%f0,%f1,%f2,%f3}, {%a0,%a1,%a2,%a3}, {%b0,%b1,%b2,%b3},
+        {%f0,%f1,%f2,%f3}, %e, 0;
+
+    st.global.f32 [%pa+1664], %f0;
+    st.global.f32 [%pa+1668], %f1;
+    st.global.f32 [%pa+1672], %f2;
+    st.global.f32 [%pa+1676], %f3;
+    ret;
+}

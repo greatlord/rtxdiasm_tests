@@ -1,0 +1,24 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed-rounding f32 fma plus fused mad: rp, rm, rz, rn, mad.
+.visible .entry fma_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f32 a, b, c, r;
+    ld.param.u64 base, [data];
+    ld.f32 a, [base];
+    ld.f32 b, [base+4];
+    ld.f32 c, [base+8];
+    fma.rp.f32 r, a, b, c;
+    st.f32 [base+16], r;
+    fma.rm.f32 r, a, b, c;
+    st.f32 [base+20], r;
+    fma.rz.f32 r, a, b, c;
+    st.f32 [base+24], r;
+    fma.rn.f32 r, a, b, c;
+    st.f32 [base+28], r;
+    mad.rn.f32 r, a, b, c;
+    st.f32 [base+32], r;
+    ret;
+}

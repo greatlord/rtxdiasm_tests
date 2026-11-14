@@ -1,0 +1,20 @@
+.version 8.6
+.target sm_80
+.address_size 64
+// Directed f32 reciprocal via exact integer long division.
+.visible .entry rcp_dir(.param .u64 data)
+{
+    .reg .u64 base;
+    .reg .f32 a, r;
+    ld.param.u64 base, [data];
+    ld.f32 a, [base];
+    rcp.rp.f32 r, a;
+    st.f32 [base+4], r;
+    rcp.rm.f32 r, a;
+    st.f32 [base+8], r;
+    rcp.rz.f32 r, a;
+    st.f32 [base+12], r;
+    rcp.rn.f32 r, a;
+    st.f32 [base+16], r;
+    ret;
+}

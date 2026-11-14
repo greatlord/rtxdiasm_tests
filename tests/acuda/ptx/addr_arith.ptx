@@ -1,0 +1,41 @@
+// add.u64 / sub.u64 of two addresses: PTX defines the result as a plain
+// value, not an address. Only differences are representation-independent
+// (descriptor-token offsets and raw PhysicalStorageBuffer addresses both
+// subtract to the byte delta): q = out+8, q-out = 8 and (q+8)-q = 8.
+// out[0] echoes the input word, out[1] = 8, out[2] = 8.
+.version 6.5
+.target sm_70
+.address_size 64
+
+.visible .entry addr_arith(
+    .param .u64 input,
+    .param .u64 output
+)
+{
+    .reg .u64           in_addr;
+    .reg .u64           out_addr;
+    .reg .u64           in_addr2;
+    .reg .u64           out_addr2;
+    .reg .u64           q;
+    .reg .u64           q2;
+    .reg .u64           diff;
+    .reg .u64           diff2;
+    .reg .u64           temp;
+
+    ld.param.u64        in_addr, [input];
+    ld.param.u64        out_addr, [output];
+
+    cvta.to.global.u64  in_addr2, in_addr;
+    cvta.to.global.u64  out_addr2, out_addr;
+
+    add.u64             q, out_addr2, 8;
+    sub.u64             diff, q, out_addr2;
+    add.u64             q2, q, 8;
+    sub.u64             diff2, q2, q;
+
+    ld.global.u64       temp, [in_addr2];
+    st.global.u64       [out_addr2], temp;
+    st.global.u64       [out_addr2+8], diff;
+    st.global.u64       [out_addr2+16], diff2;
+    ret;
+}

@@ -1,0 +1,32 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.shared .align 4 .b32 sh[2];
+.const .align 4 .f32 cf[2] = {1.5, -2.5};
+.local .align 4 .b32 ml[2];
+.visible .entry declspaces(.param .u64 p)
+{
+    .const .align 4 .u32 fc[2] = {7, 9};
+    .local .align 4 .b32 fl;
+    .reg .u64 x;
+    .reg .u32 v;
+    .reg .f32 f;
+    ld.param.u64 x, [p];
+    mov.u32 v, 11;
+    st.shared.u32 [sh+4], v;
+    ld.shared.u32 v, [sh+4];
+    st.global.u32 [x], v;
+    mov.u32 v, 22;
+    st.local.u32 [ml+4], v;
+    ld.local.u32 v, [ml+4];
+    st.global.u32 [x+4], v;
+    mov.u32 v, 33;
+    st.local.u32 [fl], v;
+    ld.local.u32 v, [fl];
+    st.global.u32 [x+8], v;
+    ld.const.u32 v, [fc+4];
+    st.global.u32 [x+12], v;
+    ld.const.f32 f, [cf+4];
+    st.global.f32 [x+16], f;
+    ret;
+}

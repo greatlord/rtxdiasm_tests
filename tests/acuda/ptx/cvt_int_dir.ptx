@@ -1,0 +1,33 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_dir(.param .u64 out)
+{
+    .reg .u64 o, u;
+    .reg .s32 s;
+    .reg .f32 f;
+    .reg .f64 d;
+    .reg .b16 h;
+    ld.param.u64 o, [out];
+    mov.s32 s, 16777217;
+    cvt.rp.f32.s32 f, s; st.f32 [o], f;
+    cvt.rm.f32.s32 f, s; st.f32 [o+4], f;
+    cvt.rz.f32.s32 f, s; st.f32 [o+8], f;
+    cvt.rn.f32.s32 f, s; st.f32 [o+12], f;
+    mov.s32 s, -16777217;
+    cvt.rp.f32.s32 f, s; st.f32 [o+16], f;
+    cvt.rm.f32.s32 f, s; st.f32 [o+20], f;
+    cvt.rz.f32.s32 f, s; st.f32 [o+24], f;
+    cvt.rn.f32.s32 f, s; st.f32 [o+28], f;
+    mov.u64 u, 9007199254740995;
+    cvt.rp.f64.u64 d, u; st.f64 [o+32], d;
+    cvt.rm.f64.u64 d, u; st.f64 [o+40], d;
+    cvt.rz.f64.u64 d, u; st.f64 [o+48], d;
+    cvt.rn.f64.u64 d, u; st.f64 [o+56], d;
+    mov.s32 s, 2049;
+    cvt.rp.f16.s32 h, s; st.u16 [o+64], h;
+    cvt.rm.f16.s32 h, s; st.u16 [o+66], h;
+    cvt.rz.f16.s32 h, s; st.u16 [o+68], h;
+    cvt.rn.f16.s32 h, s; st.u16 [o+70], h;
+    ret;
+}

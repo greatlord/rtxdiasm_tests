@@ -1,0 +1,25 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry txq3d(.param .texref tex, .param .u64 out)
+{
+    .reg .f32 s, t, r, f0, f1, f2, f3;
+    .reg .u32 w;
+    .reg .u64 p;
+    ld.param.u64 p, [out];
+    mov.f32 s, 0f3F000000;
+    mov.f32 t, 0f3F000000;
+    mov.f32 r, 0f3F000000;
+    tex.3d.v4.f32.f32 {f0, f1, f2, f3}, [tex, {s, t, r, r}];
+    txq.width.b32 w, [tex];
+    st.global.u32 [p], w;
+    txq.height.b32 w, [tex];
+    st.global.u32 [p+4], w;
+    txq.depth.b32 w, [tex];
+    st.global.u32 [p+8], w;
+    txq.array_size.b32 w, [tex];
+    st.global.u32 [p+12], w;
+    txq.num_mipmap_levels.b32 w, [tex];
+    st.global.u32 [p+16], w;
+    ret;
+}

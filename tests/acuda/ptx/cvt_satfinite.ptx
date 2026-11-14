@@ -1,0 +1,44 @@
+.version 8.6
+.target sm_80
+.address_size 64
+.visible .entry cvt_satfinite(.param .u64 out)
+{
+    .reg .u64 o;
+    .reg .b16 h;
+    .reg .b32 r;
+    .reg .f32 f, g;
+    ld.param.u64 o, [out];
+    mov.f32 f, 0f477FE000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o], h;
+    mov.f32 f, 0f47800000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+2], h;
+    mov.f32 f, 0f7F800000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+4], h;
+    mov.f32 f, 0fFF800000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+6], h;
+    mov.f32 f, 0f7FC00001;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+8], h;
+    mov.f32 f, 0fFFC00001;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+10], h;
+    mov.f32 f, 0f3FC00000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+12], h;
+    mov.f32 f, 0fC0000000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+14], h;
+    mov.f32 f, 0f477FF000;
+    cvt.rn.satfinite.f16.f32 h, f; st.u16 [o+16], h;
+    mov.f32 f, 0fC0400000;
+    cvt.rn.relu.satfinite.f16.f32 h, f; st.u16 [o+18], h;
+    mov.f32 f, 0f7F800000;
+    mov.f32 g, 0fFF800000;
+    cvt.rn.satfinite.f16x2.f32 r, f, g; st.u32 [o+20], r;
+    mov.f32 f, 0f7FC00001;
+    mov.f32 g, 0f3FC00000;
+    cvt.rn.satfinite.f16x2.f32 r, f, g; st.u32 [o+24], r;
+    mov.f32 f, 0fBF800000;
+    mov.f32 g, 0f47800000;
+    cvt.rn.relu.satfinite.f16x2.f32 r, f, g; st.u32 [o+28], r;
+    mov.f32 f, 0f3F800000;
+    mov.f32 g, 0f40000000;
+    cvt.rn.satfinite.f16x2.f32 r, f, g; st.u32 [o+32], r;
+    ret;
+}
