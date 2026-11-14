@@ -117,6 +117,10 @@ def main():
           torch.median(x.cpu(), 1).values)
     check("kthvalue 2x2000 dim=1", torch.kthvalue(x, 2, 1).values,
           torch.kthvalue(x.cpu(), 2, 1).values)
+    # 1024-thread compute_mode instantiation: the dispatcher must stay
+    # affordable for the driver's register allocator.
+    check("mode 2x2000 dim=1", torch.mode(x, 1).values,
+          torch.mode(x.cpu(), 1).values)
 
     # --- argmax / argmin indices (int64 pair high word) -------------
     for shape, dim in (((4, 8), 1), ((8, 4), 0), ((2, 2000), 1)):
