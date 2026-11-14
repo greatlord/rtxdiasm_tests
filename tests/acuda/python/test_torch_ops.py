@@ -128,13 +128,14 @@ def main():
         check(f"argmax {shape} dim={dim}", x.argmax(dim), x.cpu().argmax(dim))
         check(f"argmin {shape} dim={dim}", x.argmin(dim), x.cpu().argmin(dim))
 
-    # --- known-broken (tracked, not gated) -------------------------
-    def topk_f32():
-        x = torch.randn(4, 16, device=DEV)
-        if not torch.allclose(torch.topk(x, 4, 1).values.cpu(),
-                              torch.topk(x.cpu(), 4, 1).values):
-            raise RuntimeError("f32 topk values are wrong")
-    xfail("topk float32", topk_f32)
+    # --- topk (radix select + block-wide prefix scan) --------------
+    for shape, k in (((4, 16), 4), ((16, 16), 4), ((2, 2000), 4),
+                     ((4, 16), 1)):
+        x = torch.randn(*shape, device=DEV)
+        got_v, got_i = torch.topk(x, k, 1)
+        want_v, want_i = torch.topk(x.cpu(), k, 1)
+        check(f"topk {shape} k={k} values", got_v, want_v)
+        check(f"topk {shape} k={k} indices", got_i, want_i)
 
     print(f"\n{CHECKED - len(FAILED)}/{CHECKED} checks passed")
     if FAILED:

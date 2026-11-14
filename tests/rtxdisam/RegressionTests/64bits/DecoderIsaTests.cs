@@ -5263,6 +5263,19 @@ internal static class DecoderIsaTests
             ballotSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
         Check("SASS to PTX VOTE ballot",
             ballotPtx.Contains("vote.sync.ballot.b32 %r6, %p0, %rt0;"));
+        var ballotNegSection = new rtxdisam.SassSection();
+        ballotNegSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "VOTE.ANY",
+            Operands = { "R4", "PT", "!P2" },
+        });
+        string ballotNegPtx = rtxdisam.SassToPtx.Translate(
+            ballotNegSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
+        // ptxas inverts the predicate for __ballot_sync's flag; dropping the
+        // '!' turned topk's warp prefix scan upside down.
+        Check("SASS to PTX VOTE negated ballot",
+            ballotNegPtx.Contains("not.pred %pt0, %p2;") &&
+            ballotNegPtx.Contains("vote.sync.ballot.b32 %r4, %pt0, %rt0;"));
         var atomAddSection = new rtxdisam.SassSection();
         atomAddSection.Nodes.Add(new rtxdisam.SassInstruction
         {
@@ -5318,6 +5331,18 @@ internal static class DecoderIsaTests
             ltmaskSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
         Check("SASS to PTX SR_LTMASK",
             ltmaskPtx.Contains("mov.u32 %r3, %lanemask_lt;"));
+        var lemaskSection = new rtxdisam.SassSection();
+        lemaskSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "S2R",
+            Operands = { "R3", "SR_LEMASK" },
+        });
+        string lemaskPtx = rtxdisam.SassToPtx.Translate(
+            lemaskSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_50");
+        // SR_LEMASK is %lanemask_le (the lane mask ptxas uses in warp
+        // prefix scans), not the active-lane mask.
+        Check("SASS to PTX SR_LEMASK",
+            lemaskPtx.Contains("mov.u32 %r3, %lanemask_le;"));
         var addressPairSection = new rtxdisam.SassSection();
         addressPairSection.Nodes.Add(new rtxdisam.SassInstruction
         {
