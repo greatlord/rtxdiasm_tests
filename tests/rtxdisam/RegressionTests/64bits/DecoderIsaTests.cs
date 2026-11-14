@@ -3794,6 +3794,32 @@ internal static class DecoderIsaTests
             Mnemonic = "IMAD.X",
             Operands = { "R17", "R3", "0x1", "R2", "P1" },
         });
+        // Uniform FLO.U32 (gatherKthValue/radix select) must lift like FLO.
+        var ufloSection = new rtxdisam.SassSection();
+        ufloSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "UFLO.U32",
+            Operands = { "UR4", "UR7" },
+        });
+        string ufloPtx = rtxdisam.SassToPtx.Translate(
+            ufloSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_80");
+        Check("SASS to PTX UFLO.U32",
+            ufloPtx.Contains("clz.b32") &&
+            ufloPtx.Contains("sub.u32 %ur4, 31,"));
+        // A predicated vector store from RZ writes zeros; the predicated
+        // split must accept the zero source (gatherMedian shared counters).
+        var storeRzSection = new rtxdisam.SassSection();
+        storeRzSection.Nodes.Add(new rtxdisam.SassInstruction
+        {
+            Mnemonic = "STS.64",
+            Guard = "@!P0",
+            Operands = { "[R4]", "RZ" },
+        });
+        string storeRzPtx = rtxdisam.SassToPtx.Translate(
+            storeRzSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_80");
+        Check("SASS to PTX predicated STS.64 from RZ",
+            storeRzPtx.Contains("st.shared.u32") &&
+            storeRzPtx.Split("st.shared.u32").Length - 1 == 2);
         string clobberedPairPtx = rtxdisam.SassToPtx.Translate(
             clobberedPairSection, "k", Array.Empty<rtxdisam.PtxParameter>(), "sm_80");
         int clobberWrite = clobberedPairPtx.IndexOf("mov.b32 %r2, 0;");

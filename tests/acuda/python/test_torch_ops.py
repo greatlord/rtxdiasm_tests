@@ -102,6 +102,22 @@ def main():
         check(f"softmax {dt}", torch.softmax(a, 1),
               torch.softmax(a.cpu(), 1), rtol=1e-4, atol=1e-5)
 
+    # --- median / kthvalue / mode (radix select, UFLO, 64-bit shared
+    # --- atomics) ---------------------------------------------------
+    for shape, dim in (((4, 4), 1), ((16, 16), 1), ((8, 4), 0)):
+        x = torch.randn(*shape, device=DEV)
+        check(f"median {shape} dim={dim}", torch.median(x, dim).values,
+              torch.median(x.cpu(), dim).values)
+        check(f"kthvalue {shape} dim={dim}", torch.kthvalue(x, 2, dim).values,
+              torch.kthvalue(x.cpu(), 2, dim).values)
+        check(f"mode {shape} dim={dim}", torch.mode(x, dim).values,
+              torch.mode(x.cpu(), dim).values)
+    x = torch.randn(2, 2000, device=DEV)
+    check("median 2x2000 dim=1", torch.median(x, 1).values,
+          torch.median(x.cpu(), 1).values)
+    check("kthvalue 2x2000 dim=1", torch.kthvalue(x, 2, 1).values,
+          torch.kthvalue(x.cpu(), 2, 1).values)
+
     # --- argmax / argmin indices (int64 pair high word) -------------
     for shape, dim in (((4, 8), 1), ((8, 4), 0), ((2, 2000), 1)):
         x = torch.randn(*shape, device=DEV)

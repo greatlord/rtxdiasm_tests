@@ -1,0 +1,148 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj": {}
+  },
+  "projects": {
+    "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj",
+        "projectName": "RegressionTests",
+        "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj",
+        "packagesPath": "/home/magnusolsen/.nuget/packages/",
+        "outputPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/magnusolsen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib64/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj": {
+                "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[8.0.31, 8.0.31]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/10.0.112/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj",
+        "projectName": "rtxdisam.core",
+        "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/rtxdisam.csproj",
+        "packagesPath": "/home/magnusolsen/.nuget/packages/",
+        "outputPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/src/rtxdisam/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/magnusolsen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib64/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "K4os.Compression.LZ4.Streams": {
+              "target": "Package",
+              "version": "[1.3.8, )"
+            },
+            "ZstdSharp.Port": {
+              "target": "Package",
+              "version": "[0.8.8, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/10.0.112/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
