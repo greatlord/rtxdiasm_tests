@@ -5,15 +5,30 @@
 // bufN[0] value). Every case is compiled, spirv-val checked when the
 // binary is available, launched on the local Vulkan device, and its
 // output compared against the recorded truth.
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <io.h>
+#include <direct.h>
+#include <process.h>
+#define F_OK 0
+#define R_OK 4
+#define access _access
+#define strdup _strdup
+#else
 #include <dirent.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <regex.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "acuda/compiler.h"
 #include "acuda/context.h"
@@ -52,6 +67,56 @@ static int failures = 0;
         failures++; \
     } \
 } while (0)
+
+#ifdef _WIN32
+#define strtok_r strtok_s
+static int kit_is_dir(const char *path) {
+    DWORD a = GetFileAttributesA(path);
+    return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
+}
+static int kit_match_wild(const char *pat, const char *text) {
+    // Supports literals and ".*" sequences (patterns are normalized from [\s\S]*).
+    if (!pat || !*pat)
+        return *text == '\0';
+    if (pat[0] == '.' && pat[1] == '*') {
+        pat += 2;
+        if (!*pat)
+            return 1;
+        for (; *text; text++) {
+            if (kit_match_wild(pat, text))
+                return 1;
+        }
+        return kit_match_wild(pat, text);
+    }
+    if (*text && *pat == *text)
+        return kit_match_wild(pat + 1, text + 1);
+    return 0;
+}
+static int kit_regex_match(const char *pattern, const char *text) {
+    // Normalize PCRE-style [\s\S]* to .* then do wildcard match (search anywhere).
+    char pat[8192];
+    snprintf(pat, sizeof(pat), "%s", pattern ? pattern : "");
+    char *m;
+    while ((m = strstr(pat, "[\\s\\S]*")) != NULL) {
+        memmove(m + 2, m + 8, strlen(m + 8) + 1);
+        m[0] = '.';
+        m[1] = '*';
+    }
+    // If pattern has no leading/trailing .* semantics, search as substring/wildcard.
+    size_t n = strlen(pat);
+    int anchored_start = 0, anchored_end = 0;
+    (void)anchored_start; (void)anchored_end;
+    // Try to find match at any position if it contains .*
+    if (strstr(pat, ".*") != NULL) {
+        for (const char *t = text; *t; t++) {
+            if (kit_match_wild(pat, t))
+                return 1;
+        }
+        return kit_match_wild(pat, "");
+    }
+    return strstr(text, pat) != NULL;
+}
+#endif
 
 #define MAX_BUF 8
 #define MAX_PUSH 8
@@ -178,23 +243,71 @@ static void parse_case(const char *path, kit_case_t *c) {
     }
 }
 
-static int allow_symlink(const struct dirent *e) {
-    return e->d_name[0] != '.';
-}
-
 static int cmp_name(const void *a, const void *b) {
     return strcmp(*(const char *const *)a, *(const char *const *)b);
 }
+
+#ifndef _WIN32
+static int allow_symlink(const struct dirent *e) {
+    return e->d_name[0] != '.';
+}
+#endif
 
 // Validate SPIR-V when spirv-val is on PATH; a missing tool is a skip,
 // not a failure (some build hosts do not install SPIRV-Tools).
 static void validate_spv(const uint32_t *words, size_t nwords,
                          const char *name) {
+    size_t bytes = nwords * sizeof(uint32_t);
+#ifdef _WIN32
+    char tmpdir[MAX_PATH] = {0};
+    char tmppath[MAX_PATH] = {0};
+    DWORD dl = GetTempPathA((DWORD)sizeof(tmpdir), tmpdir);
+    if (dl == 0 || dl >= sizeof(tmpdir))
+        return;
+    if (GetTempFileNameA(tmpdir, "akv", 0, tmppath) == 0)
+        return;
+    FILE *f = fopen(tmppath, "wb");
+    if (!f) {
+        DeleteFileA(tmppath);
+        return;
+    }
+    int ok = fwrite(words, 1, bytes, f) == bytes;
+    fclose(f);
+    if (!ok) {
+        DeleteFileA(tmppath);
+        return;
+    }
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "spirv-val \"%s\"", tmppath);
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+    char mutable_cmd[1024];
+    snprintf(mutable_cmd, sizeof(mutable_cmd), "%s", cmd);
+    BOOL cp = CreateProcessA(NULL, mutable_cmd, NULL, NULL, FALSE,
+                             CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    if (cp) {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD code = 0;
+        GetExitCodeProcess(pi.hProcess, &code);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        if (code != 0) {
+            // Missing spirv-val: CreateProcess succeeded? no, not found returns !cp.
+            printf("FAIL: %s: spirv-val rejected the module (exit %lu)\n",
+                   name, (unsigned long)code);
+            failures++;
+        }
+    }
+    // If CreateProcess failed, treat as missing tool (skip).
+    DeleteFileA(tmppath);
+#else
     char tmpl[] = "/tmp/acuda-kit-spv-XXXXXX";
     int fd = mkstemp(tmpl);
     if (fd < 0)
         return;
-    size_t bytes = nwords * sizeof(uint32_t);
     const uint8_t *p = (const uint8_t *)words;
     size_t off = 0;
     int ok = 1;
@@ -227,11 +340,15 @@ static void validate_spv(const uint32_t *words, size_t nwords,
         }
     }
     unlink(tmpl);
-}
+#endif
+}
 
 static int text_match(const char *regex_pat, const char *plain,
                       const char *text) {
     if (regex_pat && regex_pat[0]) {
+#ifdef _WIN32
+        return kit_regex_match(regex_pat, text);
+#else
         char pat[8192];
         snprintf(pat, sizeof(pat), "%s", regex_pat);
         char *m;
@@ -246,11 +363,12 @@ static int text_match(const char *regex_pat, const char *plain,
         int ok = regexec(&re, text, 0, NULL, 0) == 0;
         regfree(&re);
         return ok;
+#endif
     }
     if (plain && plain[0])
         return strstr(text, plain) != NULL;
     return 1;
-}
+}
 
 // 0 = compiled, 1 = compile rejected as expected, -1 = failure.
 static int compile_case(const char *ptx, const char *name,
@@ -507,6 +625,9 @@ static int run_success(acuda_context_t ctx, acuda_kernel_t *k,
                      "validation_errors=0\n");
             int ok = 0;
             if (c->expected_regex[0]) {
+#ifdef _WIN32
+                ok = kit_regex_match(c->expected_regex, dump);
+#else
                 char pat[8192];
                 snprintf(pat, sizeof(pat), "%s", c->expected_regex);
                 // PCRE-style [\s\S]* spans lines; POSIX .* does too
@@ -523,7 +644,8 @@ static int run_success(acuda_context_t ctx, acuda_kernel_t *k,
                     ok = regexec(&re, dump, 0, NULL, 0) == 0;
                     regfree(&re);
                 }
-            } else if (c->expected[0]) {
+#endif
+            } else if (c->expected[0]) {
                 ok = strstr(dump, c->expected) != NULL;
             }
             if (!ok) {
@@ -808,16 +930,59 @@ static int run_case(acuda_context_t ctx, const char *dir, const char *name,
 
 int main(int argc, char **argv) {
     const char *root = argc > 1 ? argv[1] : ACUDA_TEST_KIT_DIR;
+    char **names = NULL;
+    size_t count = 0, cap = 0;
+    size_t rootlen = strlen(root);
+
+#ifdef _WIN32
+    if (!kit_is_dir(root)) {
+        printf("SKIP: %s not present\n", root);
+        return 0;
+    }
+    {
+        char pattern[MAX_PATH * 2];
+        snprintf(pattern, sizeof(pattern), "%s\\*", root);
+        WIN32_FIND_DATAA fd;
+        HANDLE h = FindFirstFileA(pattern, &fd);
+        if (h == INVALID_HANDLE_VALUE) {
+            printf("SKIP: %s not present\n", root);
+            return 0;
+        }
+        do {
+            if (fd.cFileName[0] == '.')
+                continue;
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                continue;
+            if (count + 1 > cap) {
+                size_t ncap = cap ? cap * 2 : 16;
+                char **nn = realloc(names, sizeof(*nn) * ncap);
+                if (!nn) {
+                    FindClose(h);
+                    for (size_t i = 0; i < count; i++) free(names[i]);
+                    free(names);
+                    return 1;
+                }
+                names = nn;
+                cap = ncap;
+            }
+            names[count] = _strdup(fd.cFileName);
+            if (!names[count]) {
+                FindClose(h);
+                for (size_t i = 0; i < count; i++) free(names[i]);
+                free(names);
+                return 1;
+            }
+            count++;
+        } while (FindNextFileA(h, &fd));
+        FindClose(h);
+    }
+#else
     DIR *d = opendir(root);
     if (!d) {
         printf("SKIP: %s not present\n", root);
         return 0;
     }
-    char **names = NULL;
-    size_t count = 0, cap = 0;
     struct dirent *ent;
-    (void)allow_symlink;
-    size_t rootlen = strlen(root);
     while ((ent = readdir(d)) != NULL) {
         if (!allow_symlink(ent))
             continue;
@@ -826,6 +991,7 @@ int main(int argc, char **argv) {
             char *p = malloc(rootlen + 1 + nl + 1);
             if (!p) {
                 closedir(d);
+                for (size_t i = 0; i < count; i++) free(names[i]);
                 free(names);
                 return 1;
             }
@@ -843,6 +1009,7 @@ int main(int argc, char **argv) {
             char **nn = realloc(names, sizeof(*nn) * ncap);
             if (!nn) {
                 closedir(d);
+                for (size_t i = 0; i < count; i++) free(names[i]);
                 free(names);
                 return 1;
             }
@@ -852,13 +1019,15 @@ int main(int argc, char **argv) {
         names[count] = strdup(ent->d_name);
         if (!names[count]) {
             closedir(d);
+            for (size_t i = 0; i < count; i++) free(names[i]);
             free(names);
             return 1;
         }
         count++;
     }
     closedir(d);
-    qsort(names, count, sizeof(*names), cmp_name);
+#endif
+    qsort(names, count, sizeof(*names), cmp_name);
 
     acuda_context_t ctx = NULL;
     acuda_status_t st = acuda_init(&ctx);
@@ -893,9 +1062,27 @@ int main(int argc, char **argv) {
         snprintf(ptx_path, rl + 2 * nl + 7, "%s/%s.ptx", dir, names[i]);
         int has_ptx = access(ptx_path, R_OK) == 0;
         if (!has_ptx) {
-            DIR *cd = opendir(dir);
             char only[256] = {0};
             int nptx = 0;
+#ifdef _WIN32
+            {
+                char pattern[2048];
+                snprintf(pattern, sizeof(pattern), "%s\\*.ptx", dir);
+                WIN32_FIND_DATAA fd;
+                HANDLE h = FindFirstFileA(pattern, &fd);
+                if (h != INVALID_HANDLE_VALUE) {
+                    do {
+                        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                            continue;
+                        if (nptx == 0)
+                            snprintf(only, sizeof(only), "%s", fd.cFileName);
+                        nptx++;
+                    } while (FindNextFileA(h, &fd));
+                    FindClose(h);
+                }
+            }
+#else
+            DIR *cd = opendir(dir);
             if (cd) {
                 struct dirent *ce;
                 while ((ce = readdir(cd)) != NULL) {
@@ -909,6 +1096,7 @@ int main(int argc, char **argv) {
                 }
                 closedir(cd);
             }
+#endif
             if (nptx == 1) {
                 char alt[1024];
                 snprintf(alt, sizeof(alt), "%s/%s", dir, only);
@@ -918,7 +1106,7 @@ int main(int argc, char **argv) {
                     has_ptx = ptx_path != NULL;
                 }
             }
-        }
+        }
         {
             int has_case = access(case_path, R_OK) == 0;
             if (!has_case && !has_ptx) {
