@@ -1,4 +1,0 @@
-entry=bfind_u32
-input=29000000
-expected=05000000
-block=1

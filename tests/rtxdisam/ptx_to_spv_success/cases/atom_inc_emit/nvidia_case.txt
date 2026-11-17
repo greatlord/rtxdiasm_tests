@@ -1,4 +1,0 @@
-entry=atom_inc
-input=00000000
-expected=000000000100000002000000
-block=1

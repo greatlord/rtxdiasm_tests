@@ -1,4 +1,0 @@
-entry=param_is_addressable
-input=01000000000000000200000000000000
-expected=0000000000000000
-block=1

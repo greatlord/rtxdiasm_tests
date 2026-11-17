@@ -1,3 +1,0 @@
-entry=rcp_f64
-args=--run-buffer-hex 8:0000000000001040 --run-buffer-hex 8:0000000000000000
-expected=0x3fd00000

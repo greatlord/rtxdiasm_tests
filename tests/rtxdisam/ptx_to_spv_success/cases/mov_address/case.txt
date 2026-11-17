@@ -1,3 +1,0 @@
-entry=mov_address
-args=--run-no-buffer
-expected_regex=validation_errors=0

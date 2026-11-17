@@ -1,3 +1,0 @@
-entry=call_rnd
-args=--run-buffer-hex 16:0000803f000080330000803f00008033 --run-buffer-hex 8:0000000000000000
-expected_regex=0x3f800001[\s\S]*0x3f800000

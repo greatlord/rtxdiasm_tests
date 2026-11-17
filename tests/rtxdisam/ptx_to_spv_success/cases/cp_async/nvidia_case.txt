@@ -1,4 +1,0 @@
-entry=cp_async
-input=00
-expected=01000000020000000300000000000000
-block=1

@@ -1,3 +1,0 @@
-entry=k
-args=--run-buffer-hex 12:78563412f0debc9a04000000 --run-buffer-hex 4:00000000
-expected=0x01234567

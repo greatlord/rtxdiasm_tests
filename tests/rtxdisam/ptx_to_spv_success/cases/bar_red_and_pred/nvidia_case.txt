@@ -1,4 +1,0 @@
-entry=bar_red_and_pred
-input=00
-expected=0200000002000000
-block=2

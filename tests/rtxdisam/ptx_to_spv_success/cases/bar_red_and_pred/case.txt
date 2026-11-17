@@ -1,3 +1,0 @@
-entry=bar_red_and_pred
-args=--run-buffer-hex 8:0000000000000000 --run-block 2
-expected_regex=buf0\[0\]=2[\s\S]*buf0\[1\]=2

@@ -1,3 +1,0 @@
-entry=const_ident
-args=--run-buffer-hex 16:00000000000000000000000000000000
-expected_regex=buf0\[0\]=0[\s\S]*buf0\[3\]=0

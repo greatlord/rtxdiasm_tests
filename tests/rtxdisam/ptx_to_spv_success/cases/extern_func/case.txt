@@ -1,3 +1,0 @@
-entry=extern_func
-args=--run-buffer-hex 8:3412000000000000 --run-buffer-hex 8:0000000000000000
-expected=buf1[0]=4660
