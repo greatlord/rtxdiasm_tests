@@ -1,4 +1,0 @@
-entry=call_rnd
-input=0000803f000080330000803f00008033
-expected=0100803f0000803f
-block=1

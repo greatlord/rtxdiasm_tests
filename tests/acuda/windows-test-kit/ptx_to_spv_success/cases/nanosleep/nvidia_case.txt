@@ -1,4 +1,0 @@
-entry=nanosleep
-input=00
-expected=0000000000000000
-block=1

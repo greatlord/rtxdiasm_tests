@@ -1,4 +1,0 @@
-entry=bar_sync
-input=00
-expected=00000000
-block=1

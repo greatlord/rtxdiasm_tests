@@ -1,5 +1,0 @@
-entry=trap
-input=00
-expected=00000000
-block=1
-expect_error=1

@@ -1,3 +1,0 @@
-entry=param_is_addressable
-args=--run-buffer-hex 16:01000000000000000200000000000000 --run-buffer-hex 8:0000000000000000
-expected_regex=buf1\[0\]=0

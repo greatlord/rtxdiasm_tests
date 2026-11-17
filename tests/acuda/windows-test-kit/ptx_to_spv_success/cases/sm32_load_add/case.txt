@@ -1,3 +1,0 @@
-entry=probe
-args=--run-buffer 256:41
-expected=buf0[0]=42

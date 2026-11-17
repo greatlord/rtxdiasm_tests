@@ -7,7 +7,7 @@ Unified test/module-test repository for rtxdisam and ACuda, split from the main 
   - `RegressionTests/`
   - `ptx_to_spv_success/`, `ptx_to_spv_error/`
   - `sass_to_ptx_success/`, `sass_to_ptx_error/`
-- `tests/acuda/` — ACuda test suite (bench, integration, ptx, python, sass, unit, windows-kit, windows-test-kit)
+- `tests/acuda/` - ACuda test suite (bench, integration, ptx, python, sass, unit, windows-kit)
 - `tests/acuda/python-examples/` — ACuda Python example/integration scripts (moved from `src/acuda/python-test`)
 
 ## Integration

@@ -1,4 +1,0 @@
-entry=uint_to_fp_bf16
-input=0100000003000000
-expected=803f
-block=1

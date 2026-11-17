@@ -1,3 +1,0 @@
-entry=k
-args=--run-buffer 256:41 --run-scalar 5
-expected=buf0[0]=19457
