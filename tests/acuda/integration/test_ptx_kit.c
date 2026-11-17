@@ -80,7 +80,7 @@ static int kit_regex_match(const char *pattern, const char *text) {
     snprintf(pat, sizeof(pat), "%s", pattern ? pattern : "");
     char *m;
     while ((m = strstr(pat, "[\\s\\S]*")) != NULL) {
-        memmove(m + 2, m + 8, strlen(m + 8) + 1);
+        memmove(m + 2, m + 7, strlen(m + 7) + 1);
         m[0] = '.';
         m[1] = '*';
     }
