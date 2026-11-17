@@ -74,26 +74,8 @@ static int kit_is_dir(const char *path) {
     DWORD a = GetFileAttributesA(path);
     return a != INVALID_FILE_ATTRIBUTES && (a & FILE_ATTRIBUTE_DIRECTORY);
 }
-static int kit_match_wild(const char *pat, const char *text) {
-    // Supports literals and ".*" sequences (patterns are normalized from [\s\S]*).
-    if (!pat || !*pat)
-        return *text == '\0';
-    if (pat[0] == '.' && pat[1] == '*') {
-        pat += 2;
-        if (!*pat)
-            return 1;
-        for (; *text; text++) {
-            if (kit_match_wild(pat, text))
-                return 1;
-        }
-        return kit_match_wild(pat, text);
-    }
-    if (*text && *pat == *text)
-        return kit_match_wild(pat + 1, text + 1);
-    return 0;
-}
 static int kit_regex_match(const char *pattern, const char *text) {
-    // Normalize PCRE-style [\s\S]* to .* then do wildcard match (search anywhere).
+    // Normalize PCRE-style [\s\S]* to .* and check parts appear in order.
     char pat[8192];
     snprintf(pat, sizeof(pat), "%s", pattern ? pattern : "");
     char *m;
@@ -102,17 +84,30 @@ static int kit_regex_match(const char *pattern, const char *text) {
         m[0] = '.';
         m[1] = '*';
     }
-    // If pattern has no leading/trailing .* semantics, search as substring/wildcard.
-    size_t n = strlen(pat);
-    int anchored_start = 0, anchored_end = 0;
-    (void)anchored_start; (void)anchored_end;
-    // Try to find match at any position if it contains .*
-    if (strstr(pat, ".*") != NULL) {
-        for (const char *t = text; *t; t++) {
-            if (kit_match_wild(pat, t))
-                return 1;
+    {
+        char out[8192]; size_t oi = 0; char *s = pat;
+        while (*s && oi + 1 < sizeof(out)) {
+            if (s[0] == '\\' && (s[1] == '[' || s[1] == ']' || s[1] == '\\' || s[1] == '(' || s[1] == ')')) {
+                out[oi++] = s[1]; s += 2;
+            } else {
+                out[oi++] = *s++;
+            }
         }
-        return kit_match_wild(pat, "");
+        out[oi] = '\0';
+        snprintf(pat, sizeof(pat), "%s", out);
+    }
+    if (strstr(pat, ".*") != NULL) {
+        const char *pos = text;
+        char tmp[8192]; snprintf(tmp, sizeof(tmp), "%s", pat);
+        char *p = tmp;
+        while (*p) {
+            char *sep = strstr(p, ".*");
+            if (sep) *sep = '\0';
+            if (*p) { const char *f = strstr(pos, p); if (!f) return 0; pos = f + strlen(p); }
+            if (!sep) break;
+            p = sep + 2;
+        }
+        return 1;
     }
     return strstr(text, pat) != NULL;
 }
