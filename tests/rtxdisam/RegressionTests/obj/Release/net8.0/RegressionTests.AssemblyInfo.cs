@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RegressionTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4e21582970782f710632ebc3c4de2fed0d321927")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9c4d736a76367ca9b14764d5261af2fb96d040b")]
 [assembly: System.Reflection.AssemblyProductAttribute("RegressionTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RegressionTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,10 @@
+.target sm_50
+.section .text.k,"ax",@progbits
+.global k
+k:
+    MOV R2, c[0x0][0x140];
+    LDG.E R2, [R2];
+    FADD32I R3, R2, 1.5;
+    MOV R4, c[0x0][0x148];
+    STG.E [R4], R3;
+    EXIT;

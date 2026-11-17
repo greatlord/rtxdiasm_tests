@@ -1,0 +1,3 @@
+entry=k
+args=--run-buffer 16:41 --run-buffer 16:0
+expected=buf1[0]=1

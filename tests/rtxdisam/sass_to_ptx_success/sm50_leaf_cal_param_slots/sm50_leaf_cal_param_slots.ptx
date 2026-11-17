@@ -1,0 +1,76 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.func (.param .u32 output) f(.param .u32 a0, .param .u32 a1, .param .u32 a2, .param .u32 a3, .param .u32 a4, .param .u32 a5, .param .u32 a6, .param .u32 a7, .param .u32 a8, .param .u32 a9, .param .u32 a10, .param .u32 a11, .param .u32 a12, .param .u32 a13, .param .u32 a14, .param .u32 a15, .param .u32 a16)
+{
+    .reg .u32 s;
+    .reg .u32 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16;
+    ld.param.u32 r0, [a0];
+    ld.param.u32 r1, [a1];
+    ld.param.u32 r2, [a2];
+    ld.param.u32 r3, [a3];
+    ld.param.u32 r4, [a4];
+    ld.param.u32 r5, [a5];
+    ld.param.u32 r6, [a6];
+    ld.param.u32 r7, [a7];
+    ld.param.u32 r8, [a8];
+    ld.param.u32 r9, [a9];
+    ld.param.u32 r10, [a10];
+    ld.param.u32 r11, [a11];
+    ld.param.u32 r12, [a12];
+    ld.param.u32 r13, [a13];
+    ld.param.u32 r14, [a14];
+    ld.param.u32 r15, [a15];
+    ld.param.u32 r16, [a16];
+    mov.u32 s, r0;
+    add.u32 s, s, r1;
+    add.u32 s, s, r2;
+    add.u32 s, s, r3;
+    add.u32 s, s, r4;
+    add.u32 s, s, r5;
+    add.u32 s, s, r6;
+    add.u32 s, s, r7;
+    add.u32 s, s, r8;
+    add.u32 s, s, r9;
+    add.u32 s, s, r10;
+    add.u32 s, s, r11;
+    add.u32 s, s, r12;
+    add.u32 s, s, r13;
+    add.u32 s, s, r14;
+    add.u32 s, s, r15;
+    add.u32 s, s, r16;
+    st.param.u32 [output], s;
+    ret;
+}
+
+.visible .entry k(.param .u64 out)
+{
+    .reg .u64 op;
+    .reg .u32 r;
+    .param .u32 p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16;
+    .param .u32 retval;
+    st.param.u32 [p0], 1;
+    st.param.u32 [p1], 2;
+    st.param.u32 [p2], 3;
+    st.param.u32 [p3], 4;
+    st.param.u32 [p4], 5;
+    st.param.u32 [p5], 6;
+    st.param.u32 [p6], 7;
+    st.param.u32 [p7], 8;
+    st.param.u32 [p8], 9;
+    st.param.u32 [p9], 10;
+    st.param.u32 [p10], 11;
+    st.param.u32 [p11], 12;
+    st.param.u32 [p12], 13;
+    st.param.u32 [p13], 14;
+    st.param.u32 [p14], 15;
+    st.param.u32 [p15], 16;
+    st.param.u32 [p16], 17;
+    call (retval), f, (p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16);
+    ld.param.u32 r, [retval];
+    ld.param.u64 op, [out];
+    st.global.u32 [op], r;
+    ret;
+}
+

@@ -1,0 +1,3 @@
+entry=uint_to_fp_bf16
+args=--run-buffer-hex 8:0100000003000000 --run-buffer-hex 4:00000000
+expected=0x00003f80

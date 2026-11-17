@@ -1,0 +1,7 @@
+.target sm_35
+.section .text.k,"ax",@progbits
+.global k
+k:
+    MOV R2, c[0x0][0x140];
+    LDC.64 R2, c[0x0][R2];
+    EXIT;

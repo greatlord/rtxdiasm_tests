@@ -1,0 +1,38 @@
+.version 6.0
+.target sm_50
+.address_size 64
+.visible .entry k(.param .u32 p0)
+{
+    .reg .b32 %rpp0;
+    ld.param.u32 %rpp0, [p0];
+    .reg .b32 %r<256>;
+    .reg .pred %pt<8>;
+    .reg .f32 %ft<8>;
+    .reg .f64 %dt<8>;
+    .reg .b32 %rt<256>;
+    .reg .b64 %rd<256>;
+    .reg .b64 %rdt<256>;
+L_k:
+L__text_k:
+mov.b32 %r1, 0;
+mov.u32 %r0, %rpp0;
+shf.l.wrap.b32 %r0, 0, %r0, 0x2;
+setp.eq.u32 %pt0, %r0, 0;
+@%pt0 bra L_jt_0;
+setp.eq.u32 %pt1, %r0, 4;
+@%pt1 bra L_jt_1;
+setp.eq.u32 %pt2, %r0, 8;
+@%pt2 bra L_jt_2;
+bra L_jt_0;
+L_jt_0:
+bra L_exit_common;
+L_jt_1:
+bra L_exit_common;
+L_jt_2:
+bra L_exit_common;
+L__L_1:
+bra L__L_1;
+L__L_16:
+L_exit_common:
+ret;
+}

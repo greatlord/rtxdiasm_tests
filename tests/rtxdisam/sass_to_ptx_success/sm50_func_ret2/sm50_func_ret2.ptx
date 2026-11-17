@@ -1,0 +1,31 @@
+.version 6.0
+.target sm_50
+.address_size 64
+
+.func (.param .u64 output) f(.param .u32 a)
+{
+    .reg .u32 x, y;
+    .reg .u64 r;
+    ld.param.u32 x, [a];
+    add.u32 y, x, 1;
+    mov.b64 r, {x, y};
+    st.param.u64 [output], r;
+    ret;
+}
+
+.visible .entry k(.param .u32 a, .param .u64 out)
+{
+    .reg .u32 x, r0, r1;
+    .reg .u64 p, op;
+    .param .u32 pa;
+    .param .u64 retval;
+    ld.param.u32 x, [a];
+    st.param.u32 [pa], x;
+    call (retval), f, (pa);
+    ld.param.u64 p, [retval];
+    mov.b64 {r0, r1}, p;
+    add.u32 r0, r0, r1;
+    ld.param.u64 op, [out];
+    st.global.u32 [op], r0;
+    ret;
+}

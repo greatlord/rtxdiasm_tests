@@ -198,8 +198,8 @@
     },
     "rtxdisam.core/1.0.0": {
       "type": "project",
-      "path": "../../src/rtxdisam/rtxdisam.csproj",
-      "msbuildProject": "../../src/rtxdisam/rtxdisam.csproj"
+      "path": "../../../../rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj",
+      "msbuildProject": "../../../../rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -208,40 +208,33 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Magnus\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/home/magnusolsen/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Magnus\\source\\repos\\ConsoleApp2\\tests\\RegressionTests\\RegressionTests.csproj",
+      "projectUniqueName": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj",
       "projectName": "RegressionTests",
-      "projectPath": "C:\\Users\\Magnus\\source\\repos\\ConsoleApp2\\tests\\RegressionTests\\RegressionTests.csproj",
-      "packagesPath": "C:\\Users\\Magnus\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Magnus\\source\\repos\\ConsoleApp2\\tests\\RegressionTests\\obj\\",
+      "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/RegressionTests.csproj",
+      "packagesPath": "/home/magnusolsen/.nuget/packages/",
+      "outputPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_tests/tests/rtxdisam/RegressionTests/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Magnus\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/home/magnusolsen/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
+        "/usr/lib64/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Magnus\\source\\repos\\ConsoleApp2\\src\\rtxdisam\\rtxdisam.csproj": {
-              "projectPath": "C:\\Users\\Magnus\\source\\repos\\ConsoleApp2\\src\\rtxdisam\\rtxdisam.csproj"
+            "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj": {
+              "projectPath": "/home/magnusolsen/git/aicode-ptx/rtxdisam/rtxdiasm_modules/rtxdiasm-runtime/src/rtxdisam/rtxdisam.csproj"
             }
           }
         }
@@ -256,7 +249,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "10.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -272,12 +265,18 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.NETCore.App.Host.linux-x64",
+            "version": "[8.0.31, 8.0.31]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.319/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/10.0.112/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
