@@ -1,0 +1,3 @@
+entry=debug_loc
+args=--run-buffer-hex 4:2a000000 --run-buffer-hex 4:00000000
+expected=0x0000002b

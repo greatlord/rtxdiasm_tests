@@ -1,0 +1,23 @@
+.version 9.4
+.target sm_50
+.address_size 64
+
+.visible .entry debug_loc(
+	.param .u64 debug_loc_param_0,
+	.param .u64 debug_loc_param_1
+)
+{
+	.reg .b32 %r<4>;
+	.reg .b64 %rd<3>;
+.loc	1 48 0
+	ld.param.u64 %rd1, [debug_loc_param_0];
+	ld.param.u64 %rd2, [debug_loc_param_1];
+	ld.global.u32 %r1, [%rd1];
+.loc	1 50 5
+	add.s32 %r2, %r1, 1;
+	st.global.u32 [%rd2], %r2;
+.loc	1 52 1
+	ret;
+
+}
+.file	1 "debug_loc.cu"
