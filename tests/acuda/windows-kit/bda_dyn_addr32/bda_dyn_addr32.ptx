@@ -1,0 +1,21 @@
+// Dynamic (register-computed) global address over a BDA pointer home in the
+// 32-bit address space.  The base comes from a .u32 pointer parameter and the
+// byte offset from a runtime scalar, so the store address only exists at run
+// time.  Guards the "home BDA" dynamic-address path at 32-bit: the launch
+// must resolve the computed address to the bound buffer and land the word in
+// slot 2.
+.version 4.1
+.target sm_52
+.address_size 32
+
+.visible .entry k(.param .u32 p, .param .u32 idx)
+{
+    .reg .u32 %r<6>;
+    ld.param.u32 %r1, [p];
+    ld.param.u32 %r2, [idx];
+    shl.b32 %r3, %r2, 2;
+    add.u32 %r4, %r1, %r3;
+    mov.u32 %r5, 0x2a;
+    st.global.u32 [%r4], %r5;
+    ret;
+}

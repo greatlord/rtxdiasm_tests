@@ -56,7 +56,8 @@ internal static class Acuda32BitPointerBdaTests
         }
 
         static (int ExitCode, string Output) RunAcudaCompileHost(
-            string exe, string ptxPath, string outPath, string entry)
+            string exe, string ptxPath, string outPath, string entry,
+            params string[] extraArgs)
         {
             var psi = new System.Diagnostics.ProcessStartInfo(exe)
             {
@@ -68,6 +69,8 @@ internal static class Acuda32BitPointerBdaTests
             psi.ArgumentList.Add(ptxPath);
             psi.ArgumentList.Add(outPath);
             psi.ArgumentList.Add(entry);
+            foreach (string extra in extraArgs)
+                psi.ArgumentList.Add(extra);
             psi.Environment["ACUDA_DUMP_PARAMS"] = "1";
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc == null) return (-1, "failed to start acuda_compile_host");
@@ -147,6 +150,43 @@ internal static class Acuda32BitPointerBdaTests
                 out2.Contains("[3] kind=1", StringComparison.Ordinal) &&
                 out2.Contains("[4] kind=0", StringComparison.Ordinal),
                 out2);
+
+            // Dynamic ("home BDA") address in the 32-bit address space: the
+            // load/store address is computed at run time instead of being a
+            // parameter value, so it has no direct binding.  With BDA
+            // enabled it must resolve as a physical address; a regression
+            // surfaces as "dynamic address has no pointer homes".
+            string ptxDyn = string.Join("\n", new[]
+            {
+                ".version 4.1",
+                ".target sm_52",
+                ".address_size 32",
+                ".visible .entry k_dyn(.param .u32 p, .param .u32 n) {",
+                "  .reg .u32 %r<8>;",
+                "  ld.param.u32 %r1, [p];",
+                "  ld.global.u32 %r0, [%r1];",
+                "  ld.param.u32 %r2, [n];",
+                "  shl.b32 %r3, %r2, 2;",
+                "  add.u32 %r4, %r3, 0x10000;",
+                "  ld.global.u32 %r5, [%r4];",
+                "  add.u32 %r6, %r5, %r0;",
+                "  st.global.u32 [%r4], %r6;",
+                "  ret;",
+                "}",
+            });
+            string dynPtx = Path.Combine(dir, "k_dyn.ptx");
+            string dynOut = Path.Combine(dir, "k_dyn.akb");
+            File.WriteAllText(dynPtx, ptxDyn);
+            var (ecDyn, outDyn) = RunAcudaCompileHost(host, dynPtx, dynOut, "k_dyn");
+            Check("32-bit dynamic BDA address compile",
+                ecDyn == 0 && File.Exists(dynOut) &&
+                !outDyn.Contains("no pointer homes", StringComparison.Ordinal),
+                outDyn);
+            Check("32-bit dynamic BDA address classification",
+                outDyn.Contains("ACuda params k_dyn: dense=2 nptr=1 npush=1", StringComparison.Ordinal) &&
+                outDyn.Contains("[0] kind=1", StringComparison.Ordinal) &&
+                outDyn.Contains("[1] kind=0", StringComparison.Ordinal),
+                outDyn);
         }
         finally
         {

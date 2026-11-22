@@ -16,6 +16,18 @@ runs). Each directory holds one `.ptx` and a `case.txt`:
 when available, launches one workgroup on the local Vulkan device, and
 compares the recorded truth.
 
+Dynamic-address (home BDA) coverage:
+
+- `bda_dyn_addr64` / `bda_dyn_addr32` compute the store address at run
+  time (pointer home + scalar offset) instead of using the parameter value
+  directly, in the 64-bit and 32-bit address spaces. They fail if the
+  computed address stops resolving to its bound buffer, which is the
+  failure mode behind `dynamic address has no pointer homes`.
+- The matching compile-time checks live in
+  `tests/rtxdisam/RegressionTests/{32bits,64bits}/Acuda*PointerBdaTests.cs`;
+  the 64-bit one also compiles the same kernel with `--cap.bda=0` to cover
+  the descriptor-home switch.
+
 Import notes:
 
 - `b64tof64`, `rcp_f64`, and `func_ptr` had no `case.txt` upstream (they

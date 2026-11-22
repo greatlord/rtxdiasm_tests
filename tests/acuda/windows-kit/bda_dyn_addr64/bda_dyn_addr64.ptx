@@ -1,0 +1,21 @@
+// Dynamic (register-computed) global address over a BDA pointer home.
+// The base address comes from the pointer parameter, the byte offset from a
+// runtime scalar, so the store address only exists at run time.  Guards the
+// "home BDA" dynamic-address path at 64-bit: the launch must resolve the
+// computed address to the bound buffer and land the word in slot 2.
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(.param .u64 p, .param .u32 idx)
+{
+    .reg .u64 %rd<4>;
+    .reg .u32 %r<4>;
+    ld.param.u64 %rd1, [p];
+    ld.param.u32 %r1, [idx];
+    mul.wide.u32 %rd2, %r1, 4;
+    add.u64 %rd3, %rd1, %rd2;
+    mov.u32 %r2, 0x2a;
+    st.global.u32 [%rd3], %r2;
+    ret;
+}
