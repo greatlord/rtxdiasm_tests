@@ -1,0 +1,25 @@
+// Lifted 32-bit SASS addressing shape (radix-sort family): a .u32 pointer
+// parameter is combined with plain 32-bit offsets under a predicate, the
+// parser rewrites that into `add __ps_N` + `selp %r, __ps_N, %r, p`, and
+// the result is zero-extended and used as a global address.  The select
+// must keep the pointer home so the widened address still lands in the
+// bound buffer (slot 2 here).
+.version 6.0
+.target sm_50
+.address_size 64
+
+.visible .entry k(.param .u32 p0, .param .u32 p1)
+{
+    .reg .b32 %r<6>;
+    .reg .b32 %rp<2>;
+    .reg .b64 %rd<2>;
+    .reg .pred %p<2>;
+    ld.param.u32 %rp0, [p0];
+    ld.param.u32 %rp1, [p1];
+    shl.b32 %r1, %rp1, 2;
+    setp.lt.u32 %p0, %rp1, 4;
+    @%p0 add.s32 %r2, %r1, %rp0;
+    cvt.u64.u32 %rd0, %r2;
+    @%p0 st.global.u32 [%rd0], %rp1;
+    ret;
+}
