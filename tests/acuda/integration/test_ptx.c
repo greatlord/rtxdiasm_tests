@@ -156,7 +156,7 @@ static void run_vecadd(acuda_context_t ctx, const char *ptx,
         failures++;
         return;
     }
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     CHECK(info.num_ptr_params == 3);
     CHECK(info.push_bytes == 4);
@@ -250,7 +250,7 @@ static void run_single_buf(acuda_context_t ctx, const char *file,
         free(ptx);
         return;
     }
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     CHECK(info.num_ptr_params == 1);
     CHECK(info.push_bytes == 0);
@@ -295,7 +295,7 @@ static void run_words_block(acuda_context_t ctx, const char *file,
         free(ptx);
         return;
     }
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     CHECK(info.num_ptr_params == 1);
     CHECK(info.push_bytes == 0);
@@ -345,7 +345,7 @@ static int kernel_uses_bda(const char *file) {
     char err[1024];
     int uses = -1;
     if (acuda_compile_ptx(ptx, NULL, &k, err, sizeof(err), &g_test_caps) == ACUDA_SUCCESS) {
-        acuda_kernel_info_t info;
+        static acuda_kernel_info_t info;
         if (acuda_kernel_info(k, &info) == ACUDA_SUCCESS)
             uses = (int)info.bda;
         acuda_kernel_free(k);
@@ -365,7 +365,7 @@ static int kernel_uses_subgroup(const char *file) {
     char err[1024];
     int uses = -1;
     if (acuda_compile_ptx(ptx, NULL, &k, err, sizeof(err), &g_test_caps) == ACUDA_SUCCESS) {
-        acuda_kernel_info_t info;
+        static acuda_kernel_info_t info;
         if (acuda_kernel_info(k, &info) == ACUDA_SUCCESS)
             uses = (int)info.uses_subgroup;
         acuda_kernel_free(k);
@@ -604,7 +604,7 @@ static void run_tex_image(acuda_context_t ctx, const char *file,
     CHECK_ST(acuda_sampler_create(ctx, &smp, &sd));
     CHECK_ST(acuda_texture_create_image(ctx, &tex, img, smp));
     CHECK_ST(acuda_malloc(ctx, &out, nwords * 4));
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     acuda_buffer_t bufs[8];
     if (info.num_ptr_params > 8) {
@@ -2260,7 +2260,7 @@ static void check_param_write_flags(void) {
     acuda_kernel_t *k = NULL;
     char err[1024];
     CHECK_ST(acuda_compile_ptx(ptx, NULL, &k, err, sizeof(err), &g_test_caps));
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     CHECK(info.num_ptr_params == 2);
     CHECK(info.param_written[0] == 1);
@@ -2288,7 +2288,7 @@ static void check_f64_param_push(void) {
     acuda_kernel_t *k = NULL;
     char err[1024];
     CHECK_ST(acuda_compile_ptx(ptx, NULL, &k, err, sizeof(err), &g_test_caps));
-    acuda_kernel_info_t info;
+    static acuda_kernel_info_t info;
     CHECK_ST(acuda_kernel_info(k, &info));
     CHECK(info.num_ptr_params == 1);
     CHECK(info.push_bytes == 8);
@@ -2481,7 +2481,7 @@ int main(void) {
             acuda_status_t st = acuda_compile_ptx(nptx, NULL, &k, err, sizeof(err), &g_test_caps);
             CHECK(st == ACUDA_SUCCESS);
             if (k) {
-                acuda_kernel_info_t info;
+                static acuda_kernel_info_t info;
                 CHECK(acuda_kernel_info(k, &info) == ACUDA_SUCCESS);
                 CHECK(info.num_ptr_params == 4);
                 printf("  numba f64: compiles, %u ptr params, %u push bytes\n",
@@ -2520,7 +2520,7 @@ int main(void) {
         CHECK(acuda_compile_ptx(byval, "byval_u32_field", &k, err,
                                 sizeof(err), &g_test_caps) == ACUDA_SUCCESS);
         if (k) {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK(acuda_kernel_info(k, &info) == ACUDA_SUCCESS);
             CHECK(info.num_params == 3);
             CHECK(info.is_ptr[0] == 4); // by-value scalar struct
@@ -2708,7 +2708,7 @@ int main(void) {
             printf("FAIL: numba ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 3);
             const uint32_t nn = 4096;
@@ -2766,7 +2766,7 @@ int main(void) {
             printf("FAIL: miniflow ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 3);
             CHECK(info.push_bytes == 4);
@@ -2792,7 +2792,7 @@ int main(void) {
             printf("FAIL: callreg ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 2);
             CHECK(info.push_bytes == 0);
@@ -2818,7 +2818,7 @@ int main(void) {
             printf("FAIL: predcover ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 2);
             CHECK(info.push_bytes == 0);
@@ -2845,7 +2845,7 @@ int main(void) {
             printf("FAIL: bf16 ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 2);
             CHECK(info.push_bytes == 0);
@@ -2871,7 +2871,7 @@ int main(void) {
             printf("FAIL: looplong ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 4);
             CHECK(info.push_bytes == 32);
@@ -2899,7 +2899,7 @@ int main(void) {
             printf("FAIL: arithclose ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 7);
             CHECK(info.push_bytes == 0);
@@ -2925,7 +2925,7 @@ int main(void) {
             printf("FAIL: shmem ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 3);
             CHECK(info.shared_bytes == 1280);
@@ -2947,7 +2947,7 @@ int main(void) {
             printf("FAIL: shmemnb ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 4);
             CHECK(info.shared_bytes == 1024);
@@ -2973,7 +2973,7 @@ int main(void) {
             printf("FAIL: narrow ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 12);
             CHECK(info.shared_bytes == 16384);
@@ -2999,7 +2999,7 @@ int main(void) {
             printf("FAIL: f16nb ptx compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 4);
             CHECK(info.shared_bytes == 0);
@@ -4339,7 +4339,7 @@ int main(void) {
                 CHECK_ST(acuda_sampler_create(ctx, &smp, &sdesc));
                 CHECK_ST(acuda_texture_create_image(ctx, &tex, img, smp));
                 CHECK_ST(acuda_malloc(ctx, &out, 32));
-                acuda_kernel_info_t ti;
+                static acuda_kernel_info_t ti;
                 CHECK_ST(acuda_kernel_info(tk, &ti));
                 CHECK(ti.num_ptr_params == 2);
                 CHECK(ti.is_tex[0] == 1);
@@ -5968,7 +5968,7 @@ int main(void) {
         CHECK(acuda_compile_ptx(scalar_bda, NULL, &k, err, sizeof(err), &g_test_caps) ==
               ACUDA_SUCCESS);
         if (k) {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             memset(&info, 0, sizeof(info));
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.is_ptr[0] == 2); // scalar, not a binding
@@ -6032,7 +6032,7 @@ int main(void) {
             printf("FAIL: ptrwordval compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 1);
             CHECK(info.push_bytes == 8);
@@ -6130,7 +6130,7 @@ int main(void) {
             printf("FAIL: smword compile: %s\n", err);
             failures++;
         } else {
-            acuda_kernel_info_t info;
+            static acuda_kernel_info_t info;
             CHECK_ST(acuda_kernel_info(k, &info));
             CHECK(info.num_ptr_params == 1);
             CHECK(info.push_bytes == 4);
