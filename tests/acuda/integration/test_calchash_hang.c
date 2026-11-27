@@ -42,6 +42,7 @@ static char *read_file(const char *path, size_t *out_n) {
 }
 
 int main(int argc, char **argv) {
+    setvbuf(stdout, NULL, _IONBF, 0);
     const char *cubin_path =
         (argc > 1) ? argv[1]
                    : "C:/Users/Magnus/AppData/Local/Temp/opencode/calchash_fatbin.bin";
